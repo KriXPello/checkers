@@ -1,0 +1,20 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.web.json",
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "#constants": ["../shared/constants/index.ts"],
+      "#entities": ["../shared/entities/index.ts"],
+      "#interfaces": ["../shared/interfaces/index.ts"],
+      "#utils": ["../shared/utils/index.ts"]
+    }
+  },
+
+  "references": [
+    {
+      "path": "./tsconfig.config.json"
+    },
+  ]
+}

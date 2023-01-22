@@ -2,7 +2,7 @@
   <main>
     <div id="list-container">
       <div id="control-panel">
-        <MyButton disabled>Создать</MyButton>
+        <CreateRoomButton @new-room="addRoomToList" />
       </div>
 
       <table>
@@ -14,7 +14,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="room in rooms" :key="room.id">
+          <tr
+            v-for="room in rooms"
+            class="room-row"
+            :key="room.id"
+            @click=""
+          >
             <td>{{ room.title }}</td>
             <td>{{ `${room.playersCount}/2` }}</td>
             <td>{{ room.isSecured ? 'закрытая' : 'открытая' }}</td>
@@ -27,12 +32,15 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-import MyButton from '@/components/MyButton.vue';
 import type { IRoomShortInfo } from '#interfaces';
+import CreateRoomButton from '@/components/CreateRoomButton.vue';
+import { isConnecting } from '../modules/connection'
 
 const rooms = ref<IRoomShortInfo[]>([]);
 
-
+const addRoomToList = (room: IRoomShortInfo) => {
+  rooms.value.push(room);
+}
 </script>
 
 <style scoped>
@@ -59,5 +67,12 @@ table {
 }
 #th-players, #th-type {
   width: 25%;
+}
+
+.room-row {
+  transition: all 200ms;
+}
+.room-row:hover {
+  background-color: lightgray;
 }
 </style>

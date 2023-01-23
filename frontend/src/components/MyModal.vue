@@ -2,15 +2,15 @@
   <Teleport to="body">
     <div v-if="shown" class="my-modal-background">
       <div
-        class="my-modal-container"
+        class="container"
         :style="containerStyles"
       >
-        <div class="my-modal-header">
+        <div v-if="!hideHeader" class="header">
           <span class="single-line-text">{{ title }}</span>
           <div v-if="closable" @click="closeModal">✖</div>
         </div>
 
-        <div class="my-modal-content">
+        <div class="content">
           <slot></slot>
         </div>
       </div>
@@ -21,10 +21,11 @@
 <script lang="ts" setup>
 import { computed, type StyleValue } from 'vue';
 
-const { width, height } = defineProps<{
+const props = defineProps<{
   title?: string,
   shown?: boolean,
   closable?: boolean,
+  hideHeader?: boolean,
   width?: string | number,
   height?: string | number,
 }>()
@@ -33,13 +34,15 @@ const emit = defineEmits(['close'])
 
 const closeModal = () => emit('close');
 
-const widthNum = Number(width);
-const heightNum = Number(height);
+const containerStyles = computed<StyleValue>(() => {
+  const widthNum = Number(props.width);
+  const heightNum = Number(props.height);
 
-const containerStyles = computed<StyleValue>(() => ({
-  width: isNaN(widthNum) ? width : `${widthNum}px`,
-  height: isNaN(heightNum) ? height : `${heightNum}px`,
-}))
+  return {
+    width: isNaN(widthNum) ? props.width : `${widthNum}px`,
+    height: isNaN(heightNum) ? props.height : `${heightNum}px`,
+  }
+})
 </script>
 
 <style scoped>
@@ -55,7 +58,7 @@ const containerStyles = computed<StyleValue>(() => ({
   align-items: center;
 }
 
-.my-modal-container {
+.container {
   min-width: 100px;
   padding: 8px;
   background-color: white;
@@ -63,7 +66,7 @@ const containerStyles = computed<StyleValue>(() => ({
   box-shadow: 2px 2px 10px lightgray;
 }
 
-.my-modal-header {
+.header {
   width: 100%;
   height: 30px;
   padding-left: 8px;
@@ -73,12 +76,12 @@ const containerStyles = computed<StyleValue>(() => ({
   justify-content: space-between;
 }
 
-.my-modal-header span {
+.header span {
   font-size: 18px;
   font-weight: 600;
 }
 
-.my-modal-header div {
+.header div {
   width: 30px;
   height: 30px;
   cursor: pointer;
@@ -87,7 +90,7 @@ const containerStyles = computed<StyleValue>(() => ({
   align-items: center;
 }
 
-.my-modal-content {
+.content {
   flex-grow: 1;
 }
 </style>

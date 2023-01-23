@@ -4,8 +4,8 @@ import { IClientMessageData, IMove, RoleInRoom } from '#interfaces';
 
 const idField = joi.string().min(1).required();
 
-export const changeName = joi.object<IClientMessageData.ChangeName>({
-  newName: idField,
+export const logIn = joi.object<IClientMessageData.LogIn>({
+  name: idField,
 });
 
 const password = joi.string().allow('');

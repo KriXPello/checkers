@@ -1,16 +1,19 @@
-import { ObjectSet } from '#utils';
 import { User } from './user';
 
 export namespace UsersManager {
-  const usersSet = new ObjectSet<User>([]);
+  const usersMap = new Map<string, User>();
 
-  export const getList = () => usersSet.elements;
+  export const getList = () => Array.from(usersMap.values());
 
-  export const add = (user: User) => {
-    usersSet.insert(user);
+  export const find = (token: string): User | null => {
+    return usersMap.get(token) ?? null;
   };
 
-  export const remove = (id: string) => {
-    usersSet.remove(id);
+  export const add = (user: User) => {
+    usersMap.set(user.token, user);
+  };
+
+  export const remove = (token: string) => {
+    usersMap.delete(token);
   };
 }

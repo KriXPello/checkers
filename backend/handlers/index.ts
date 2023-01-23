@@ -1,15 +1,18 @@
 import { ClientMessageType } from '#interfaces';
 
-import { changeName } from './change-name';
-import { createRoom } from './create-room';
-import { joinRoom } from './join-room';
+import { logIn } from './log-in';
+// import { createRoom } from './create-room';
+// import { joinRoom } from './join-room';
 
-import { HandlerData } from '../interfaces';
-import { makeStep } from './make-step';
+import { Handler } from '../interfaces';
+// import { makeStep } from './make-step';
 
-export const handlersMap: Record<ClientMessageType, HandlerData<any>> = {
-  [ClientMessageType.ChangeName]: changeName,
-  [ClientMessageType.CreateRoom]: createRoom,
-  [ClientMessageType.JoinRoom]: joinRoom,
-  [ClientMessageType.MakeStep]: makeStep,
+export const handlersMap: Record<ClientMessageType, Handler<any>> = {
+  [ClientMessageType.LogIn]: logIn,
+  // [ClientMessageType.CreateRoom]: createRoom,
+  // [ClientMessageType.JoinRoom]: joinRoom,
+  // [ClientMessageType.MakeStep]: makeStep,
+  [ClientMessageType.CreateRoom]: {} as any,
+  [ClientMessageType.JoinRoom]: {} as any,
+  [ClientMessageType.MakeStep]: {} as any,
 };

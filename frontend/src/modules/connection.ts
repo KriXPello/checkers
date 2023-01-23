@@ -1,36 +1,56 @@
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import type { IClientMessage } from '#interfaces';
 
 const httpAddress = 'http://localhost:7000';
 const socketAddress = 'ws://localhost:7001';
 
-let currentSocket: WebSocket;
+export enum ConnectionState {
+  NotSet,
+  Disconnected,
+  Connecting,
+  Connected,
+}
 
-export const isConnected = ref(false);
-export const isConnecting = ref(false);
+let socket: WebSocket;
 
-const resetStates = () => {
-  isConnected.value = false;
-  isConnecting.value = false;
-};
+const userToken = ref('');
+const state = ref(ConnectionState.NotSet);
 
-export const reconnect = () => {
-  isConnecting.value = true;
+export const connectionState = computed(() => state.value);
 
-  if (currentSocket?.readyState == WebSocket.OPEN) {
-    currentSocket.close(1000);
+export const connect = (token: string) => new Promise<boolean>((resolve) => {
+  state.value = ConnectionState.Connecting;
+
+  if (socket?.readyState == WebSocket.OPEN) {
+    socket.close(1000);
   }
 
-  const socket = new WebSocket(socketAddress);
+  socket = new WebSocket(`${socketAddress}/?token=${token}`);
 
-  currentSocket = socket;
-
-  socket.onopen = () => {
-    isConnected.value = true;
-    isConnecting.value = false;
+  // Действует только во время подключения (#)
+  socket.onerror = () => {
+    state.value = ConnectionState.NotSet;
+    resolve(false);
   };
 
-  socket.onclose = resetStates;
-  socket.onerror = resetStates;
+  socket.onopen = () => {
+    state.value = ConnectionState.Connected;
+
+    userToken.value = token;
+
+    socket.onerror = null; // (#) после открытия очищаем
+    socket.onclose = () => {
+      state.value = ConnectionState.Disconnected;
+    };
+
+    resolve(true);
+  };
+});
+
+export const reconnect = () => {
+  return connect(userToken.value);
 };
 
-reconnect();
+export const sendMessage = (message: IClientMessage) => {
+
+};

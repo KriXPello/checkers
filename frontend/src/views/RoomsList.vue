@@ -34,7 +34,6 @@
 import { ref } from 'vue';
 import type { IRoomShortInfo } from '#interfaces';
 import CreateRoomButton from '@/components/CreateRoomButton.vue';
-import { isConnecting } from '../modules/connection'
 
 const rooms = ref<IRoomShortInfo[]>([]);
 

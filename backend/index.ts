@@ -1,52 +1,42 @@
 import ws from 'ws';
+import express from 'express';
 
-import { getUniqueString, logError } from '#utils';
+import { getUniqueString } from '#utils';
 
 import { WebsocketCommunicator } from './services';
-import { RoomsManager, User, UsersManager } from './entities';
-import { handleMessage } from './app';
-import { ServerMessageType } from '#interfaces';
+import { User, UsersManager } from './entities';
+import { handleMessage } from 'app';
 
-const wsServer = new ws.Server({
-  port: 5000,
+const httpServer = express();
+httpServer.use(express.json());
+
+httpServer.post('/game', async (req, res) => {
+  const token = req.headers['authorization'];
+
+  const result = await handleMessage(req.body, token);
+
+  if (typeof result === 'object') {
+    res.status(200).send(JSON.stringify(result));
+  } else {
+    res.sendStatus(result);
+  }
 });
 
-wsServer.on('connection', (socket) => {
+httpServer.listen(7000);
+
+const wsServer = new ws.Server({
+  port: 7001,
+});
+
+wsServer.on('connection', (socket, req) => {
   const id = getUniqueString();
+  const token = getUniqueString();
 
   const communicator = new WebsocketCommunicator({
     socket,
     receiverId: id,
   });
-  const user = new User({ id, name: 'Unnamed', communicator });
+  const user = new User({ id, token, name: 'Unnamed', communicator });
 
   UsersManager.add(user);
-
-  socket.on('message', async (data) => {
-    try {
-      const dataStr = data.toString();
-
-      const message = JSON.parse(dataStr);
-
-      await handleMessage(message, user);
-    } catch (err) {
-      logError('socket.onmessage', err);
-    }
-  });
-
-  socket.on('close', async () => {
-    UsersManager.remove(id);
-
-    RoomsManager.removeUserFromRooms(id);
-    await RoomsManager.broadcastAll();
-  });
-
-  RoomsManager.broadcastAll([user]);
-
-  user.sendMessage({
-    type: ServerMessageType.UserData,
-    data: {
-      userData: user.serialize(),
-    }
-  });
 });

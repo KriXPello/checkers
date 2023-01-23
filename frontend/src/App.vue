@@ -1,32 +1,20 @@
 <template>
-  <header>
-    <span>
-      {{ connectionStatus }}
-    </span>
+  <!-- <header>
 
-    <MyButton
-      v-if="!isConnected"
-      :disabled="isConnecting"
-      @click="reconnect"
-    >
-      Переподключиться
-    </MyButton>
-  </header>
+  </header> -->
 
   <div id="router-wrapper">
     <RouterView />
+
+    <ConnectionOverlay />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import ConnectionOverlay from './components/ConnectionOverlay.vue';
 import MyButton from './components/MyButton.vue';
-import { isConnected, isConnecting, reconnect } from './modules/connection'
-
-const connectionStatus = computed(() => {
-  const value = isConnected.value ? 'Подключён' : 'Не подключён';
-  return `Статус: ${value}`;
-})
+import { reconnect } from './modules/connection'
 
 </script>
 

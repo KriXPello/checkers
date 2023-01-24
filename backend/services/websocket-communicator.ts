@@ -18,6 +18,10 @@ export class WebsocketCommunicator implements ICommunicator {
     this.receiverId = receiverId;
   }
 
+  public closeConnection(): void {
+    this.socket.close(1000);
+  }
+
   public send(message: IServerMessage): Promise<ISentMessage> {
     return new Promise<ISentMessage>((resolve) => {
       const { receiverId } = this;

@@ -1,10 +1,10 @@
 import ws from 'ws';
 import express from 'express';
 
-import { getUniqueString } from '#utils';
+import { logError } from '#utils';
 
 import { WebsocketCommunicator } from './services';
-import { User, UsersManager } from './entities';
+import { UsersManager } from './entities';
 import { handleMessage } from 'app';
 
 const httpServer = express();
@@ -29,14 +29,30 @@ const wsServer = new ws.Server({
 });
 
 wsServer.on('connection', (socket, req) => {
-  const id = getUniqueString();
-  const token = getUniqueString();
+  try {
+    const reqUrl = new URL(req.url!);
 
-  const communicator = new WebsocketCommunicator({
-    socket,
-    receiverId: id,
-  });
-  const user = new User({ id, token, name: 'Unnamed', communicator });
+    const token = reqUrl.searchParams.get('token');
 
-  UsersManager.add(user);
+    if (!token) {
+      console.log('no token', req.url);
+      return;
+    }
+
+    const user = UsersManager.find(token);
+
+    if (!user) {
+      console.log('no user', token);
+      return;
+    }
+
+    const communicator = new WebsocketCommunicator({
+      socket,
+      receiverId: user.id,
+    });
+
+    user.updateCommunicator(communicator);
+  } catch (err) {
+    logError('wsServer on connection', err);
+  }
 });

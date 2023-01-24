@@ -7,5 +7,6 @@ export interface ISentMessage {
 }
 
 export interface ICommunicator {
+  closeConnection(): void;
   send(message: IServerMessage): Promise<ISentMessage>;
 }

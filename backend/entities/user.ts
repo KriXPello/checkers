@@ -9,7 +9,7 @@ interface ConstructorData {
 }
 
 export class User {
-  public id: string;
+  public readonly id: string;
   public readonly token: string;
   public name: string;
 
@@ -22,6 +22,11 @@ export class User {
     this.token = token;
     this.name = name;
     this.communicator = communicator;
+  }
+
+  public updateCommunicator(newCommunicator: ICommunicator) {
+    this.communicator.closeConnection();
+    this.communicator = newCommunicator;
   }
 
   public serialize(): IUser {

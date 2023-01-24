@@ -43,7 +43,9 @@ export type IClientMessage =
 
 export namespace IServerResponse {
   export interface LogIn {
+    id: string,
     token: string,
+    name: string,
   }
 
   export interface CreateRoom {

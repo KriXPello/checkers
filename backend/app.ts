@@ -23,6 +23,10 @@ export const handleMessage = async (
   try {
     const messageData = message.data;
 
+    if (message.type === ClientMessageType.CheckToken) {
+      message.data;
+    }
+
     const validationResult = handler.schema.validate(messageData);
 
     if (validationResult.error) {

@@ -1,21 +1,23 @@
-import { IRoomFullInfo, RoleInRoom } from '#interfaces';
+import { GameSide, IRoomFullInfo, IRoomShortInfo } from '#interfaces';
 import { IMove } from '../helpers';
 
 export enum ClientMessageType {
   LogIn = 'LogIn',
-  CreateRoom = 'createRoom',
-  JoinRoom = 'joinRoom',
-  MakeStep = 'makeStep',
+  CheckToken = 'CheckToken',
+  CreateRoom = 'CreateRoom',
+  GetRooms = 'GetRooms',
+  JoinRoom = 'JoinRoom',
+  SwapPlayers = 'SwapPlayers',
+  MakeStep = 'MakeStep',
 }
-
-type CM<T extends ClientMessageType, DataT extends Record<string, any>> = {
-  type: T,
-  data: DataT,
-};
 
 export namespace IClientMessageData {
   export interface LogIn {
     name: string,
+  }
+
+  export interface CheckToken {
+    token: string,
   }
 
   export interface CreateRoom {
@@ -23,10 +25,17 @@ export namespace IClientMessageData {
     password?: string,
   }
 
+  export interface GetRooms {
+
+  }
+
   export interface JoinRoom {
     roomId: string,
-    joinAs: RoleInRoom,
     password?: string,
+  }
+
+  export interface SwapPlayers {
+    roomId: string,
   }
 
   export interface MakeStep {
@@ -35,11 +44,20 @@ export namespace IClientMessageData {
   }
 }
 
-export type IClientMessage =
-  | CM<ClientMessageType.LogIn, IClientMessageData.LogIn>
-  | CM<ClientMessageType.CreateRoom, IClientMessageData.CreateRoom>
-  | CM<ClientMessageType.JoinRoom, IClientMessageData.JoinRoom>
-  | CM<ClientMessageType.MakeStep, IClientMessageData.MakeStep>;
+export type IClientMessageDataMap = {
+  [ClientMessageType.LogIn]: IClientMessageData.LogIn,
+  [ClientMessageType.CheckToken]: IClientMessageData.CheckToken,
+  [ClientMessageType.CreateRoom]: IClientMessageData.CreateRoom,
+  [ClientMessageType.GetRooms]: IClientMessageData.GetRooms,
+  [ClientMessageType.JoinRoom]: IClientMessageData.JoinRoom,
+  [ClientMessageType.SwapPlayers]: IClientMessageData.SwapPlayers,
+  [ClientMessageType.MakeStep]: IClientMessageData.MakeStep,
+};
+
+export type IClientMessage<T extends ClientMessageType = ClientMessageType> = {
+  type: T,
+  data: IClientMessageDataMap[T];
+};
 
 export namespace IServerResponse {
   export interface LogIn {
@@ -48,24 +66,46 @@ export namespace IServerResponse {
     name: string,
   }
 
+  export type CheckToken = {
+    valid: false,
+  } | {
+    valid: true,
+    id: string,
+    name: string,
+  };
+
   export interface CreateRoom {
     roomInfo: IRoomFullInfo,
   }
-}
 
-export type IClientMessageDataMap = {
-  [ClientMessageType.LogIn]: IClientMessageData.LogIn,
-  [ClientMessageType.CreateRoom]: IClientMessageData.CreateRoom,
-  [ClientMessageType.JoinRoom]: {},
-  [ClientMessageType.MakeStep]: {},
-};
+  export interface GetRooms {
+    rooms: IRoomShortInfo[],
+  }
+
+  export type JoinRoom = {
+    joined: false,
+    reason: string,
+  } | {
+    joined: true,
+  };
+
+  export interface SwapPlayers {
+    swapped: boolean,
+  }
+
+  export interface MakeStep {
+    success: boolean,
+  }
+}
 
 export type IServerResponseMap = {
   [ClientMessageType.LogIn]: IServerResponse.LogIn,
+  [ClientMessageType.CheckToken]: IServerResponse.CheckToken;
   [ClientMessageType.CreateRoom]: IServerResponse.CreateRoom,
-  [ClientMessageType.JoinRoom]: {},
-  [ClientMessageType.MakeStep]: {},
+  [ClientMessageType.GetRooms]: IServerResponse.GetRooms,
+  [ClientMessageType.JoinRoom]: IServerResponse.JoinRoom,
+  [ClientMessageType.SwapPlayers]: IServerResponse.SwapPlayers,
+  [ClientMessageType.MakeStep]: IServerResponse.MakeStep,
 };
 
-export type IClientMessageData = IClientMessageDataMap[keyof IClientMessageDataMap];
 export type IServerResponse = IServerResponseMap[keyof IServerResponseMap];

@@ -18,8 +18,8 @@ type CreateData = {
 };
 
 export class Game {
-  private _winnerSide?: GameSide;
-  public get winnerSide(): GameSide | undefined { return this._winnerSide; }
+  private _winnerSide: GameSide | null = null;
+  public get winnerSide() { return this._winnerSide; }
 
   private _turnOf: GameSide;
   public get turnOf(): GameSide { return this._turnOf; }
@@ -149,12 +149,13 @@ export class Game {
 
     const availableStepsMap = this.findAvailableSteps(selectedUnit.side);
     const availableStepsOfUnit = availableStepsMap[selectedUnit.id];
-    if (!availableStepsOfUnit) {
+    if (!availableStepsOfUnit.length) {
       return false;
     }
 
     const selectedStep = availableStepsOfUnit
       .find(step => samePos(step.destination, to));
+
     const stepUnavailable = !selectedStep;
     if (stepUnavailable) {
       return false;

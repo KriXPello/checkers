@@ -13,6 +13,7 @@ interface ConstructorData {
 export class Room {
   public readonly id: string;
   public title: string;
+  public readonly creator: User;
   public readonly lobby: RoomLobby;
 
   private savedConfig: IGameConfig;
@@ -23,6 +24,7 @@ export class Room {
 
     this.id = getUniqueString();
     this.title = title;
+    this.creator = creator;
     this.lobby = new RoomLobby({ creator, password });
 
     // TODO: Возможность выбирать настройки
@@ -63,7 +65,7 @@ export class Room {
     this.game = Game.createNew({ config: savedConfig });
   };
 
-  public get winner(): IUser | undefined {
+  public get winner(): IUser | null {
     const { actors, game } = this;
     const { winnerSide } = game;
     return winnerSide && actors[winnerSide];
@@ -80,12 +82,13 @@ export class Room {
   }
 
   public get fullInfo(): IRoomFullInfo {
-    const { baseInfo, game, actors } = this;
+    const { baseInfo, game, actors, creator } = this;
 
     const gameSnapshot = game.snapshot();
 
     return {
       ...baseInfo,
+      creatorId: creator.id,
       actors,
       gameSnapshot,
     };

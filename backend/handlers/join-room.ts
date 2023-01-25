@@ -1,38 +1,60 @@
-// import { IClientMessageData, RoleInRoom } from '#interfaces';
+import { ClientMessageType } from '#interfaces';
 
-// import { clientSchemas } from '../schemas';
-// import { broadcastRoomFullInfo } from '../services';
+import { clientSchemas } from '../schemas';
+import { broadcastRoomFullInfo } from '../services';
 
-// import { RoomsManager } from '../entities';
-// import { Handler } from '../interfaces';
+import { RoomsManager } from '../entities';
+import { Handler } from '../interfaces';
 
-// export const joinRoom: Handler<IClientMessageData.JoinRoom> = {
-//   schema: clientSchemas.joinRoom,
-//   callback: async ({ messageData, sender }) => {
-//     const { roomId, joinAs, password } = messageData;
+export const joinRoom: Handler<ClientMessageType.JoinRoom> = {
+  schema: clientSchemas.joinRoom,
+  callback: async ({ messageData, sender }) => {
+    const { roomId, password } = messageData;
 
-//     const room = RoomsManager.find(roomId);
-//     if (!room) {
-//       return;
-//     }
+    const room = RoomsManager.find(roomId);
+    if (!room) {
+      return {
+        joined: false,
+        reason: 'Комната не найдена',
+      };
+    }
 
-//     const { lobby } = room;
+    const { lobby } = room;
 
-//     let isJoined = false;
+    if (!lobby.checkPassword(password)) {
+      return {
+        joined: false,
+        reason: 'Неправильный пароль',
+      };
+    }
 
-//     if (joinAs === RoleInRoom.Player) {
-//       isJoined = lobby.joinAsPlayer(sender, password);
-//     }
+    if (!lobby.hasPlace) {
+      return {
+        joined: false,
+        reason: 'Комната заполнена',
+      };
+    }
 
-//     if (joinAs === RoleInRoom.Spectator) {
-//       isJoined = lobby.joinAsSpectator(sender);
-//     }
+    if (lobby.hasPlayer(sender.id)) {
+      return {
+        joined: false,
+        reason: 'Вы уже в этой комнате',
+      };
+    }
 
-//     if (!isJoined) {
-//       return;
-//     }
+    const joined = lobby.addPlayer(sender, password);
 
-//     await broadcastRoomFullInfo(room, lobby.allMembersList);
-//     await RoomsManager.broadcastAll();
-//   },
-// };
+    if (!joined) {
+      return {
+        joined: false,
+        reason: 'Непредвиденная ошибка',
+      };
+    }
+
+    await broadcastRoomFullInfo(room, lobby.playersList);
+
+    return {
+      joined: true,
+    };
+  },
+};

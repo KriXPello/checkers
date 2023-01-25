@@ -1,8 +1,6 @@
-import { computed, ref } from 'vue';
-import type { IClientMessage } from '#interfaces';
-
-const httpAddress = 'http://localhost:7000';
-const socketAddress = 'ws://localhost:7001';
+import { readonly, ref } from 'vue';
+import { userData } from './user';
+import { socketAddress } from '../constants';
 
 export enum ConnectionState {
   NotSet,
@@ -13,10 +11,9 @@ export enum ConnectionState {
 
 let socket: WebSocket;
 
-const userToken = ref('');
 const state = ref(ConnectionState.NotSet);
 
-export const connectionState = computed(() => state.value);
+export const connectionState = readonly(state);
 
 export const connect = (token: string) => new Promise<boolean>((resolve) => {
   state.value = ConnectionState.Connecting;
@@ -36,8 +33,6 @@ export const connect = (token: string) => new Promise<boolean>((resolve) => {
   socket.onopen = () => {
     state.value = ConnectionState.Connected;
 
-    userToken.value = token;
-
     socket.onerror = null; // (#) после открытия очищаем
     socket.onclose = () => {
       state.value = ConnectionState.Disconnected;
@@ -48,9 +43,5 @@ export const connect = (token: string) => new Promise<boolean>((resolve) => {
 });
 
 export const reconnect = () => {
-  return connect(userToken.value);
-};
-
-export const sendMessage = (message: IClientMessage) => {
-
+  return connect(userData.token);
 };

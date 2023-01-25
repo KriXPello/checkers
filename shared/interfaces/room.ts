@@ -1,12 +1,7 @@
 import { GameSide, IGameSnapshot } from './game';
 import { IUser } from './user';
 
-export enum RoleInRoom {
-  Player = 'player',
-  Spectator = 'spectator',
-}
-
-export type IActors = Record<GameSide, IUser | undefined>;
+export type IActors = Record<GameSide, IUser | null>;
 
 export interface IRoomBaseInfo {
   id: string,
@@ -19,6 +14,7 @@ export interface IRoomShortInfo extends IRoomBaseInfo {
 }
 
 export interface IRoomFullInfo extends IRoomBaseInfo {
+  creatorId: string,
   actors: IActors,
   gameSnapshot: IGameSnapshot,
 }

@@ -11,11 +11,41 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { useRouter } from 'vue-router'
+import { ClientMessageType } from '#interfaces';
 import ConnectionOverlay from './components/ConnectionOverlay.vue';
-import MyButton from './components/MyButton.vue';
-import { reconnect } from './modules/connection'
+import { connect, sendMessage, userData } from './modules';
 
+const router = useRouter();
+
+const tokenKey = 'token';
+const tokenFromStorage = localStorage.getItem(tokenKey);
+if (tokenFromStorage) {
+  const result = await sendMessage({
+    type: ClientMessageType.CheckToken,
+    data: {
+      token: tokenFromStorage,
+    }
+  })
+
+  if (!result.ok) {
+    return;
+  }
+
+  if (result.data.valid) {
+    const { id, name } = result.data;
+
+    userData.id = id;
+    userData.name = name;
+    userData.token = tokenFromStorage;
+
+    connect(tokenFromStorage);
+  } else {
+    localStorage.removeItem(tokenKey);
+
+    router.replace('/');
+  }
+}
 </script>
 
 <style scoped>

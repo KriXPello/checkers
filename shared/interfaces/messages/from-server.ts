@@ -1,45 +1,14 @@
 import { IUser } from '../user';
-import { IRoomFullInfo, IRoomShortInfo } from '../room';
-
-type SM<T extends ServerMessageType, DataT extends Record<string, any>> = {
-  type: T,
-  data: DataT,
-};
-
-export type IServerMessageData =
-  | IServerMessageData.RoomsList
-  | IServerMessageData.UserData
-  | IServerMessageData.RoomData
-  | IServerMessageData.GameOver
-  | ServerMessageType.Toast;
-
-export type IServerMessage =
-  | SM<ServerMessageType.RoomsList, IServerMessageData.RoomsList>
-  | SM<ServerMessageType.UserData, IServerMessageData.UserData>
-  | SM<ServerMessageType.RoomData, IServerMessageData.RoomData>
-  | SM<ServerMessageType.GameOver, IServerMessageData.GameOver>
-  | SM<ServerMessageType.Toast, IServerMessageData.Toast>;
-
+import { IRoomFullInfo } from '../room';
 
 export enum ServerMessageType {
-  RoomsList = 'roomsList',
   UserData = 'userData',
   RoomData = 'roomData',
   GameOver = 'gameOver',
-  Toast = 'toast',
-}
-
-export enum ToastLevel {
-  Light = 'light',
-  Success = 'success',
-  Info = 'info',
+  CreatorLeft = 'creatorLeft',
 }
 
 export namespace IServerMessageData {
-  export interface RoomsList {
-    rooms: IRoomShortInfo[],
-  }
-
   export interface UserData {
     userData: IUser,
   }
@@ -53,9 +22,19 @@ export namespace IServerMessageData {
     roomId: string,
   }
 
-  export interface Toast {
-    level: ToastLevel,
-    headerText?: string,
-    bodyText?: string,
+  export interface CreatorLeft {
+
   }
 }
+
+export type IServerMessageDataMap = {
+  [ServerMessageType.UserData]: IServerMessageData.UserData,
+  [ServerMessageType.RoomData]: IServerMessageData.RoomData,
+  [ServerMessageType.GameOver]: IServerMessageData.GameOver,
+  [ServerMessageType.CreatorLeft]: IServerMessageData.CreatorLeft,
+};
+
+export type IServerMessage<T extends ServerMessageType = ServerMessageType> = {
+  type: T,
+  data: IServerMessageDataMap[T],
+};

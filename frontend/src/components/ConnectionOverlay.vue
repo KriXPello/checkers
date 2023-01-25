@@ -4,7 +4,7 @@
     hide-header
   >
     <div class="modal-content">
-      Подключение...
+      <span>Подключение...</span>
     </div>
   </MyModal>
 
@@ -13,10 +13,11 @@
     hide-header
   >
     <div class="modal-content">
-      Подключение прервано
+      <span>Подключение прервано</span>
+
+      <MyButton @click="reconnect">Переподключиться</MyButton>
     </div>
 
-    <MyButton @click="reconnect">Переподключиться</MyButton>
   </MyModal>
 </template>
 

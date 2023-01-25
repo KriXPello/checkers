@@ -1,4 +1,4 @@
-import { ObjectSet } from '#utils';
+import { GameSide } from '../../shared/interfaces/game';
 import { User } from './user';
 
 interface LobbyData {
@@ -7,15 +7,16 @@ interface LobbyData {
 }
 
 export class RoomLobby {
-  private players: ObjectSet<User>;
-  private spectators: ObjectSet<User>;
+  private players: Record<GameSide, User | null>;
   private password: string | undefined;
 
-  // TODO: Создатель помещается в наблюдателей и уже потом может стать игроком
   constructor(data: LobbyData) {
     const { creator, password } = data;
-    this.players = new ObjectSet([creator]);
-    this.spectators = new ObjectSet([]);
+
+    this.players = {
+      [GameSide.Top]: creator,
+      [GameSide.Bottom]: null,
+    };
     this.password = password;
   }
 
@@ -23,48 +24,56 @@ export class RoomLobby {
     return !!this.password;
   }
 
-  public hasPlayer(userId: string): boolean {
-    return this.players.has(userId);
-  }
-
-  public hasUser(userId: string): boolean {
-    return this.players.has(userId) || this.spectators.has(userId);
-  };
-
   public get playersList(): User[] {
-    return this.players.elements;
+    const list = Object.values(this.players)
+      .filter(player => player != null) as User[];
+
+    return list;
   }
 
-  public get allMembersList(): User[] {
-    const allMembers = this.players.elements.concat(this.spectators.elements);
-    const joinedSet = new ObjectSet(allMembers);
-    return joinedSet.elements;
+  public get hasPlace(): boolean {
+    const { bottom, top } = this.players;
+    return !(bottom && top);
   }
 
-  public joinAsPlayer(user: User, password: string | undefined): boolean {
-    const hasSpace = this.players.length < 2;
-    const passwordValid = this.checkPassword(password);
+  public hasPlayer(userId: string): boolean {
+    const { top, bottom } = this.players;
 
-    if (!hasSpace || !passwordValid) {
+    return top?.id == userId || bottom?.id == userId;
+  }
+
+  public addPlayer(user: User, password: string | undefined): boolean {
+    if (this.hasPlace || this.hasPlayer(user.id) || !this.checkPassword(password)) {
       return false;
     }
 
-    const insertResult = this.players.insert(user);
-    return insertResult;
+    return true;
   }
 
-  public joinAsSpectator(user: User): boolean {
-    const isAdded = this.spectators.insert(user);
-    return isAdded;
+  public removeUser(id: string): User | null {
+    for (const key in this.players) {
+      const side = key as GameSide;
+
+      const player = this.players[side];
+      if (player?.id == id) {
+        this.players[side] = null;
+
+        return player;
+      }
+    }
+
+    return null;
   }
 
-  public removeUser(id: string) {
-    const removedUser = this.players.remove(id) || this.spectators.remove(id);
-
-    return removedUser;
+  public swapUsers() {
+    const { bottom, top } = this.players;
+    this.players = {
+      bottom: top,
+      top: bottom,
+    };
   }
 
-  private checkPassword(password: string | undefined): boolean {
+  public checkPassword(password: string | undefined): boolean {
     const noPassword = !this.password;
     const passwordValid = password === this.password;
     return noPassword || passwordValid;

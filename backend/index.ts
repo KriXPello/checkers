@@ -36,6 +36,7 @@ wsServer.on('connection', (socket, req) => {
 
     if (!token) {
       console.log('no token', req.url);
+      socket.terminate();
       return;
     }
 
@@ -43,6 +44,7 @@ wsServer.on('connection', (socket, req) => {
 
     if (!user) {
       console.log('no user', token);
+      socket.terminate();
       return;
     }
 

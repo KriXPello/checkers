@@ -19,7 +19,7 @@ export class WebsocketCommunicator implements ICommunicator {
   }
 
   public closeConnection(): void {
-    this.socket.close(1000);
+    this.socket.terminate();
   }
 
   public send(message: IServerMessage): Promise<ISentMessage> {

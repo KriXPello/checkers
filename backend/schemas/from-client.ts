@@ -1,6 +1,6 @@
 import joi from 'joi';
 
-import { IClientMessageData, IMove, RoleInRoom } from '#interfaces';
+import { IClientMessageData, IMove } from '#interfaces';
 
 const idField = joi.string().min(1).required();
 
@@ -22,12 +22,11 @@ export const createRoom = joi.object<IClientMessageData.CreateRoom>({
 export const joinRoom = joi.object<IClientMessageData.JoinRoom>({
   roomId: idField,
 
-  joinAs: joi
-    .string()
-    .valid(RoleInRoom.Player, RoleInRoom.Spectator)
-    .required(),
-
   password,
+});
+
+export const swapPlayers = joi.object<IClientMessageData.SwapPlayers>({
+  roomId: idField,
 });
 
 // [number, number]

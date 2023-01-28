@@ -23,12 +23,15 @@ export const sendMessage = async <T extends ClientMessageType>(
   try {
     const messageJson = JSON.stringify(message);
 
+    const headers = new Headers();
+    headers.append('Authorization', userData.token);
+    headers.append('Content-Type', 'application/json');
+
     const response = await fetch(`${httpAddress}/game`, {
-      headers: {
-        'Authorization': userData.token,
-      },
       method: 'POST',
+      headers: headers,
       body: messageJson,
+      mode: 'cors',
     });
 
     if (response.status != 200) {

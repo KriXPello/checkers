@@ -9,6 +9,12 @@ export namespace RoomsManager {
 
   export const find = (id: string) => roomsSet.find(id);
 
+  export const findRoomWithUser = (userId: string) => {
+    const room = roomsSet.elements.find((room) => room.lobby.hasPlayer(userId));
+
+    return room;
+  };
+
   export const addRoom = (room: Room) => {
     roomsSet.insert(room);
   };

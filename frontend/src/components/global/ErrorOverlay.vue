@@ -1,6 +1,6 @@
 <template>
   <MyModal
-    :shown="somethingWentWrong"
+    v-if="somethingWentWrong"
     hide-header
   >
     <div class="modal-content">
@@ -12,9 +12,8 @@
 </template>
 
 <script lang="ts" setup>
-import MyModal from './MyModal.vue';
-import { somethingWentWrong } from '../modules'
-import MyButton from './MyButton.vue';
+import { MyButton, MyModal } from '../common';
+import { somethingWentWrong } from '@/modules';
 </script>
 
 <style scoped>

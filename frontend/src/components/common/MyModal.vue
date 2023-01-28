@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div v-if="shown" class="my-modal-background">
+    <div class="my-modal-background">
       <div
         class="container"
         :style="containerStyles"
@@ -23,7 +23,6 @@ import { computed, type StyleValue } from 'vue';
 
 const props = defineProps<{
   title?: string,
-  shown?: boolean,
   closable?: boolean,
   hideHeader?: boolean,
   width?: string | number,
@@ -64,6 +63,8 @@ const containerStyles = computed<StyleValue>(() => {
   background-color: white;
   border-radius: 16px;
   box-shadow: 2px 2px 10px lightgray;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
@@ -91,6 +92,7 @@ const containerStyles = computed<StyleValue>(() => {
 }
 
 .content {
+  position: relative;
   flex-grow: 1;
 }
 </style>

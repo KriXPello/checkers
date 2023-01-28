@@ -1,7 +1,11 @@
 <template>
   <main>
-    <MyInput v-model="name" label="Имя" required />
-    <MyButton :disabled="!name || sendingMessage" @click="login">Играть</MyButton>
+    <MyInput v-model="nameInput" label="Имя" required />
+    <MyButton
+      id="play-button"
+      :disabled="!nameInput || sendingMessage || connectionState === ConnectionState.Connecting"
+      @click="login"
+    >Играть</MyButton>
   </main>
 </template>
 
@@ -9,11 +13,10 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router'
 import { ClientMessageType } from '#interfaces';
-import MyButton from '@/components/MyButton.vue';
-import MyInput from '@/components/MyInput.vue';
-import { sendMessage, userData, sendingMessage } from '@/modules';
+import { sendMessage, userData, sendingMessage, connectionState, connect, saveToken, ConnectionState } from '@/modules';
+import { MyButton, MyInput } from '../components';
 
-const name = ref('');
+const nameInput = ref('');
 
 const router = useRouter();
 
@@ -21,7 +24,7 @@ const login = async () => {
   const result = await sendMessage({
     type: ClientMessageType.LogIn,
     data: {
-      name: name.value,
+      name: nameInput.value,
     },
   })
 
@@ -31,7 +34,22 @@ const login = async () => {
     userData.token = token;
     userData.name = name;
 
-    router.replace('/rooms');
+    const isConnected = await connect(token);
+
+    if (isConnected) {
+      nameInput.value = '';
+      saveToken(token);
+
+      router.replace('/rooms');
+    } else {
+      alert('Не удалось подключиться');
+    }
   }
 }
 </script>
+
+<style scoped>
+#play-button {
+  margin-left: 8px;
+}
+</style>

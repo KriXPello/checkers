@@ -51,10 +51,17 @@ export const joinRoom: Handler<ClientMessageType.JoinRoom> = {
       };
     }
 
-    await broadcastRoomFullInfo(room, lobby.playersList);
+    const { playersList } = lobby;
+
+    console.log('lobby:', playersList);
+
+    const result = await broadcastRoomFullInfo(room, playersList);
+
+    console.log('broadcast result', result);
 
     return {
       joined: true,
+      roomInfo: room.fullInfo,
     };
   },
 };

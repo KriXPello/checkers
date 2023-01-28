@@ -1,6 +1,7 @@
 import { readonly, ref } from 'vue';
 import { userData } from './user';
 import { socketAddress } from '../constants';
+import { handleMessage } from './handle-message';
 
 export enum ConnectionState {
   NotSet,
@@ -36,6 +37,10 @@ export const connect = (token: string) => new Promise<boolean>((resolve) => {
     socket.onerror = null; // (#) после открытия очищаем
     socket.onclose = () => {
       state.value = ConnectionState.Disconnected;
+    };
+    socket.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      handleMessage(data);
     };
 
     resolve(true);

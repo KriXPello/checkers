@@ -10,7 +10,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, type StyleValue, watch } from 'vue';
 
 const props = defineProps<{
   modelValue: any,
@@ -44,7 +44,6 @@ const text = computed({
 })
 
 watch(text, (newValue) => {
-  console.log(newValue)
   if (!newValue) {
     wasTouched.value = false;
   }
@@ -54,17 +53,17 @@ watch(text, (newValue) => {
 <style scoped>
 .my-input-container {
   position: relative;
-  height: 40px;
-  padding-top: 8px;
+  height: 30px;
 }
 
 input {
-  height: 30px;
+  height: 100%;
   width: 100%;
   padding: 4px;
   border: solid 1px lightgray;
   font-size: 14px;
   border-radius: 8px;
+  outline: none;
 }
 
 .error {
@@ -73,8 +72,9 @@ input {
 
 span {
   position: absolute;
-  top: 2px;
+  top: 0;
   left: 8px;
+  transform: translateY(-50%);
   padding: 0 2px;
   background-color: white;
   border-radius: 4px;

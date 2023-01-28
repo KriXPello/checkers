@@ -1,9 +1,26 @@
 <template>
   <main>
-    <div id="list-container">
-      <div id="control-panel">
-        <CreateRoomButton @new-room="addRoomToList" />
+    <div class="list-container">
+      <div class="control-panel">
+        <MyButton
+          :disabled="sendingMessage"
+          @click="getRooms"
+        >
+          Обновить
+        </MyButton>
+
+        <CreateRoomButton class="create-button" />
       </div>
+
+      <MyModal
+        v-if="selectedRoom"
+        width="200"
+        closable
+        :title="selectedRoom.title"
+        @close="selectedRoom = null"
+      >
+        <SelectedRoomForm :room="selectedRoom" />
+      </MyModal>
 
       <table>
         <thead>
@@ -18,7 +35,7 @@
             v-for="room in rooms"
             class="room-row"
             :key="room.id"
-            @click=""
+            @click="selectedRoom = room"
           >
             <td>{{ room.title }}</td>
             <td>{{ `${room.playersCount}/2` }}</td>
@@ -31,25 +48,37 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import type { IRoomShortInfo } from '#interfaces';
-import CreateRoomButton from '@/components/CreateRoomButton.vue';
+import { ref, onBeforeMount } from 'vue';
+import { ClientMessageType, type IRoomShortInfo } from '#interfaces';
+import { CreateRoomButton, MyButton, MyModal, SelectedRoomForm } from '../components';
+import { sendingMessage, sendMessage } from '@/modules';
 
 const rooms = ref<IRoomShortInfo[]>([]);
+const selectedRoom = ref<IRoomShortInfo | null>(null);
 
-const addRoomToList = (room: IRoomShortInfo) => {
-  rooms.value.push(room);
+const getRooms = async () => {
+  const result = await sendMessage({
+    type: ClientMessageType.GetRooms,
+    data: {},
+  })
+
+  if (result.ok) {
+    rooms.value = result.data.rooms;
+  }
 }
+
+onBeforeMount(getRooms);
+
 </script>
 
 <style scoped>
-#list-container {
+.list-container {
   width: 100%;
   max-width: 400px;
   height: 100%;
 }
 
-#control-panel {
+.control-panel {
   width: 100%;
   height: 50px;
   display: flex;

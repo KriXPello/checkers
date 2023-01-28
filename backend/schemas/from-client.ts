@@ -2,13 +2,12 @@ import joi from 'joi';
 
 import { IClientMessageData, IMove } from '#interfaces';
 
-const idField = joi.string().min(1).required();
-
-export const logIn = joi.object<IClientMessageData.LogIn>({
-  name: idField,
-});
-
+const requiredString = joi.string().min(1).required();
 const password = joi.string().allow('');
+
+export const checkToken = joi.object<IClientMessageData.CheckToken>({
+  token: requiredString,
+});
 
 export const createRoom = joi.object<IClientMessageData.CreateRoom>({
   title: joi
@@ -19,14 +18,16 @@ export const createRoom = joi.object<IClientMessageData.CreateRoom>({
   password,
 });
 
+export const getRooms = joi.object<IClientMessageData.GetRooms>({});
+
 export const joinRoom = joi.object<IClientMessageData.JoinRoom>({
-  roomId: idField,
+  roomId: requiredString,
 
   password,
 });
 
-export const swapPlayers = joi.object<IClientMessageData.SwapPlayers>({
-  roomId: idField,
+export const logIn = joi.object<IClientMessageData.LogIn>({
+  name: requiredString,
 });
 
 // [number, number]
@@ -41,6 +42,10 @@ const move = joi.object<IMove>({
 });
 
 export const makeStep = joi.object<IClientMessageData.MakeStep>({
-  roomId: idField,
+  roomId: requiredString,
   move,
+});
+
+export const swapPlayers = joi.object<IClientMessageData.SwapPlayers>({
+  roomId: requiredString,
 });

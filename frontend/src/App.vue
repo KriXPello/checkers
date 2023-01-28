@@ -11,16 +11,21 @@
 </template>
 
 <script setup lang="ts">
+import { onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router'
 import { ClientMessageType } from '#interfaces';
-import ConnectionOverlay from './components/ConnectionOverlay.vue';
-import { connect, sendMessage, userData } from './modules';
+import { ConnectionOverlay } from './components';
+import { clearToken, connect, extractToken, sendMessage, userData } from './modules';
+import { Route } from './constants';
 
 const router = useRouter();
 
-const tokenKey = 'token';
-const tokenFromStorage = localStorage.getItem(tokenKey);
-if (tokenFromStorage) {
+onBeforeMount(async () => {
+  const tokenFromStorage = extractToken();
+  if (!tokenFromStorage) {
+    return;
+  }
+
   const result = await sendMessage({
     type: ClientMessageType.CheckToken,
     data: {
@@ -39,13 +44,17 @@ if (tokenFromStorage) {
     userData.name = name;
     userData.token = tokenFromStorage;
 
-    connect(tokenFromStorage);
-  } else {
-    localStorage.removeItem(tokenKey);
+    const isConnected = await connect(tokenFromStorage);
 
-    router.replace('/');
+    if (isConnected && router.currentRoute.value.path == Route.Home) {
+      router.replace(Route.RoomsList);
+    }
+  } else {
+    clearToken();
+
+    router.replace(Route.Home);
   }
-}
+})
 </script>
 
 <style scoped>

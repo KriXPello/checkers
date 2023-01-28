@@ -3,19 +3,8 @@ import { getUniqueString } from '#utils';
 
 import { clientSchemas } from '../schemas';
 
-import { Handler, ICommunicator } from '../interfaces';
-import { User, UsersManager } from 'entities';
-
-const emptyCommunicator: ICommunicator = {
-  closeConnection: () => { },
-  send: async (message) => {
-    return {
-      success: true,
-      message,
-      receiverId: '',
-    };
-  }
-};
+import { Handler } from '../interfaces';
+import { User, UsersManager } from '../entities';
 
 export const logIn: Handler<ClientMessageType.LogIn> = {
   noAuth: true,
@@ -29,10 +18,17 @@ export const logIn: Handler<ClientMessageType.LogIn> = {
       id,
       token,
       name,
-      communicator: emptyCommunicator,
+      communicator: null,
     });
 
     UsersManager.add(user);
+
+    // Если пользователь не подключился за указанное время, удаляем его
+    setTimeout(() => {
+      if (!user.wasConnected) {
+        UsersManager.remove(token);
+      }
+    }, 30 * 1000);
 
     return {
       id,

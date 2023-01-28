@@ -1,14 +1,17 @@
 import ws from 'ws';
 import express from 'express';
+import cors from 'cors';
 
 import { logError } from '#utils';
 
 import { WebsocketCommunicator } from './services';
-import { UsersManager } from './entities';
-import { handleMessage } from 'app';
+import { RoomsManager, UsersManager } from './entities';
+import { handleMessage } from './app';
+import { ServerMessageType } from '../shared/interfaces/messages';
 
 const httpServer = express();
 httpServer.use(express.json());
+httpServer.use(cors());
 
 httpServer.post('/game', async (req, res) => {
   const token = req.headers['authorization'];
@@ -30,7 +33,7 @@ const wsServer = new ws.Server({
 
 wsServer.on('connection', (socket, req) => {
   try {
-    const reqUrl = new URL(req.url!);
+    const reqUrl = new URL(req.url!, `http://${req.headers.host}`);
 
     const token = reqUrl.searchParams.get('token');
 
@@ -53,8 +56,27 @@ wsServer.on('connection', (socket, req) => {
       receiverId: user.id,
     });
 
-    user.updateCommunicator(communicator);
+    user.changeCommunicator(communicator);
+
+    user.sendMessage({
+      type: ServerMessageType.UserData,
+      data: {
+        userData: user.serialize(),
+      },
+    });
+
+    // Если пользователь переподключился во время игры, отправляем ему данные его комнаты
+    const roomWithUser = RoomsManager.findRoomWithUser(user.id);
+    if (roomWithUser) {
+      user.sendMessage({
+        type: ServerMessageType.RoomData,
+        data: {
+          roomFullInfo: roomWithUser.fullInfo,
+        }
+      });
+    }
+
   } catch (err) {
-    logError('wsServer on connection', err);
+    logError('error wsServer on connection', err);
   }
 });

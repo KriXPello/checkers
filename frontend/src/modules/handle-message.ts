@@ -1,5 +1,10 @@
+import { useRouter } from 'vue-router';
 import { ServerMessageType, type IServerMessage, type IServerMessageData, type IServerMessageDataMap } from '#interfaces';
 import { userData } from './user';
+import { Route } from '@/constants';
+import { roomData } from './active-room';
+
+const router = useRouter();
 
 const handleUserData = (data: IServerMessageData.UserData) => {
   const { id, name } = data.userData;
@@ -9,7 +14,11 @@ const handleUserData = (data: IServerMessageData.UserData) => {
 };
 
 const handleRoomData = (data: IServerMessageData.RoomData) => {
-
+  console.log('handdling room data', data);
+  roomData.value = data.roomFullInfo;
+  if (router.currentRoute.value.path != Route.GameRoom) {
+    router.replace(Route.GameRoom);
+  }
 };
 
 const handleGameOver = (data: IServerMessageData.GameOver) => {

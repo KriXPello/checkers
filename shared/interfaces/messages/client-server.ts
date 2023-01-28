@@ -87,6 +87,7 @@ export namespace IServerResponse {
     reason: string,
   } | {
     joined: true,
+    roomInfo: IRoomFullInfo,
   };
 
   export interface SwapPlayers {

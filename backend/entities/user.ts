@@ -5,8 +5,19 @@ interface ConstructorData {
   id: string,
   token: string,
   name: string,
-  communicator: ICommunicator,
+  communicator: ICommunicator | null,
 }
+
+const mockCommunicator: ICommunicator = {
+  closeConnection: () => { },
+  send: async (message) => {
+    return {
+      success: true,
+      message,
+      receiverId: '',
+    };
+  }
+};
 
 export class User {
   public readonly id: string;
@@ -21,10 +32,14 @@ export class User {
     this.id = id;
     this.token = token;
     this.name = name;
-    this.communicator = communicator;
+    this.communicator = communicator ?? mockCommunicator;
   }
 
-  public updateCommunicator(newCommunicator: ICommunicator) {
+  public get wasConnected() {
+    return this.communicator != mockCommunicator;
+  }
+
+  public changeCommunicator(newCommunicator: ICommunicator) {
     this.communicator.closeConnection();
     this.communicator = newCommunicator;
   }

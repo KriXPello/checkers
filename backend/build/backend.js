@@ -2,6 +2,76 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./app.ts":
+/*!****************!*\
+  !*** ./app.ts ***!
+  \****************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "handleMessage": () => (/* binding */ handleMessage)
+/* harmony export */ });
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #utils */ "../shared/utils/index.ts");
+/* harmony import */ var _interfaces__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! #interfaces */ "../shared/interfaces/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./entities */ "./entities/index.ts");
+/* harmony import */ var _handlers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./handlers */ "./handlers/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+const allowedMessageTypes = Object.values(_interfaces__WEBPACK_IMPORTED_MODULE_1__.ClientMessageType);
+const handleMessage = (message, token = '') => __awaiter(void 0, void 0, void 0, function* () {
+    const { type } = message;
+    const typeAllowed = allowedMessageTypes.includes(type);
+    if (!typeAllowed) {
+        console.log('handle message: тип не разрешён', type);
+        return 400;
+    }
+    const handler = _handlers__WEBPACK_IMPORTED_MODULE_3__.handlersMap[type];
+    try {
+        const messageData = message.data;
+        if (message.type === _interfaces__WEBPACK_IMPORTED_MODULE_1__.ClientMessageType.CheckToken) {
+            message.data;
+        }
+        const validationResult = handler.schema.validate(messageData);
+        if (validationResult.error) {
+            (0,_utils__WEBPACK_IMPORTED_MODULE_0__.logError)('validation error', validationResult.error);
+            return 400;
+        }
+        if (handler.noAuth) {
+            const result = yield handler.callback({ messageData });
+            return result;
+        }
+        else {
+            const sender = _entities__WEBPACK_IMPORTED_MODULE_2__.UsersManager.find(token);
+            if (!sender) {
+                return 401;
+            }
+            const result = yield handler.callback({
+                messageData,
+                sender,
+            });
+            return result;
+        }
+    }
+    catch (err) {
+        (0,_utils__WEBPACK_IMPORTED_MODULE_0__.logError)('message handler:', err);
+        return 500;
+    }
+});
+
+
+/***/ }),
+
 /***/ "./entities/index.ts":
 /*!***************************!*\
   !*** ./entities/index.ts ***!
@@ -9,6 +79,8 @@
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Room": () => (/* reexport safe */ _room__WEBPACK_IMPORTED_MODULE_1__.Room),
+/* harmony export */   "RoomsManager": () => (/* reexport safe */ _rooms_manager__WEBPACK_IMPORTED_MODULE_3__.RoomsManager),
 /* harmony export */   "User": () => (/* reexport safe */ _user__WEBPACK_IMPORTED_MODULE_0__.User),
 /* harmony export */   "UsersManager": () => (/* reexport safe */ _users_manager__WEBPACK_IMPORTED_MODULE_2__.UsersManager)
 /* harmony export */ });
@@ -33,50 +105,75 @@
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "RoomLobby": () => (/* binding */ RoomLobby)
 /* harmony export */ });
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #utils */ "../shared/utils/index.ts");
+/* harmony import */ var _interfaces__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #interfaces */ "../shared/interfaces/index.ts");
 
 class RoomLobby {
-    // TODO: Создатель помещается в наблюдателей и уже потом может стать игроком
     constructor(data) {
         const { creator, password } = data;
-        this.players = new _utils__WEBPACK_IMPORTED_MODULE_0__.ObjectSet([creator]);
-        this.spectators = new _utils__WEBPACK_IMPORTED_MODULE_0__.ObjectSet([]);
-        this.password = password;
+        this.players = {
+            [_interfaces__WEBPACK_IMPORTED_MODULE_0__.GameSide.Top]: creator,
+            [_interfaces__WEBPACK_IMPORTED_MODULE_0__.GameSide.Bottom]: null,
+        };
+        this.password = password || null;
     }
     get isSecured() {
         return !!this.password;
     }
-    hasPlayer(userId) {
-        return this.players.has(userId);
-    }
-    hasUser(userId) {
-        return this.players.has(userId) || this.spectators.has(userId);
-    }
-    ;
     get playersList() {
-        return this.players.elements;
+        const { top, bottom } = this.players;
+        const list = [];
+        if (top)
+            list.push(top);
+        if (bottom)
+            list.push(bottom);
+        return list;
     }
-    get allMembersList() {
-        const allMembers = this.players.elements.concat(this.spectators.elements);
-        const joinedSet = new _utils__WEBPACK_IMPORTED_MODULE_0__.ObjectSet(allMembers);
-        return joinedSet.elements;
+    get actors() {
+        var _a, _b;
+        const { bottom, top } = this.players;
+        return {
+            [_interfaces__WEBPACK_IMPORTED_MODULE_0__.GameSide.Top]: (_a = top === null || top === void 0 ? void 0 : top.serialize()) !== null && _a !== void 0 ? _a : null,
+            [_interfaces__WEBPACK_IMPORTED_MODULE_0__.GameSide.Bottom]: (_b = bottom === null || bottom === void 0 ? void 0 : bottom.serialize()) !== null && _b !== void 0 ? _b : null,
+        };
     }
-    joinAsPlayer(user, password) {
-        const hasSpace = this.players.length < 2;
-        const passwordValid = this.checkPassword(password);
-        if (!hasSpace || !passwordValid) {
+    get hasPlace() {
+        const { bottom, top } = this.players;
+        return !(bottom && top);
+    }
+    hasPlayer(userId) {
+        const { top, bottom } = this.players;
+        return (top === null || top === void 0 ? void 0 : top.id) == userId || (bottom === null || bottom === void 0 ? void 0 : bottom.id) == userId;
+    }
+    addPlayer(user, password) {
+        if (!this.hasPlace || this.hasPlayer(user.id) || !this.checkPassword(password)) {
             return false;
         }
-        const insertResult = this.players.insert(user);
-        return insertResult;
-    }
-    joinAsSpectator(user) {
-        const isAdded = this.spectators.insert(user);
-        return isAdded;
+        const { top, bottom } = this.players;
+        if (!top) {
+            this.players[_interfaces__WEBPACK_IMPORTED_MODULE_0__.GameSide.Top] = user;
+        }
+        if (!bottom) {
+            this.players[_interfaces__WEBPACK_IMPORTED_MODULE_0__.GameSide.Bottom] = user;
+        }
+        return true;
     }
     removeUser(id) {
-        const removedUser = this.players.remove(id) || this.spectators.remove(id);
-        return removedUser;
+        for (const key in this.players) {
+            const side = key;
+            const player = this.players[side];
+            if ((player === null || player === void 0 ? void 0 : player.id) == id) {
+                this.players[side] = null;
+                return player;
+            }
+        }
+        return null;
+    }
+    swapUsers() {
+        const { bottom, top } = this.players;
+        this.players = {
+            bottom: top,
+            top: bottom,
+        };
     }
     checkPassword(password) {
         const noPassword = !this.password;
@@ -94,7 +191,9 @@ class RoomLobby {
   \**************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-/* unused harmony export Room */
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Room": () => (/* binding */ Room)
+/* harmony export */ });
 /* harmony import */ var _interfaces__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #interfaces */ "../shared/interfaces/index.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! #utils */ "../shared/utils/index.ts");
 /* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! #entities */ "../shared/entities/index.ts");
@@ -108,6 +207,7 @@ class Room {
         const { title, password, creator } = data;
         this.id = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getUniqueString)();
         this.title = title;
+        this.creator = creator;
         this.lobby = new _room_lobby__WEBPACK_IMPORTED_MODULE_3__.RoomLobby({ creator, password });
         // TODO: Возможность выбирать настройки
         const config = {
@@ -127,7 +227,7 @@ class Room {
         if (!isPlayer) {
             return false;
         }
-        const activeActor = this.actors[this.game.turnOf];
+        const activeActor = this.lobby.actors[this.game.turnOf];
         const isActiveActor = activeActor && activeActor.id === initiator.id;
         if (!isActiveActor) {
             return false;
@@ -141,8 +241,9 @@ class Room {
     }
     ;
     get winner() {
-        const { actors, game } = this;
+        const { game, lobby } = this;
         const { winnerSide } = game;
+        const { actors } = lobby;
         return winnerSide && actors[winnerSide];
     }
     get shortInfo() {
@@ -151,27 +252,16 @@ class Room {
         return Object.assign(Object.assign({}, baseInfo), { playersCount: playersList.length });
     }
     get fullInfo() {
-        const { baseInfo, game, actors } = this;
+        const { baseInfo, game, creator, lobby } = this;
+        const { actors } = lobby;
         const gameSnapshot = game.snapshot();
-        return Object.assign(Object.assign({}, baseInfo), { actors,
+        return Object.assign(Object.assign({}, baseInfo), { creatorId: creator.id, actors,
             gameSnapshot });
     }
     get baseInfo() {
         const { id, title } = this;
         const { isSecured } = this.lobby;
         return { id, title, isSecured };
-    }
-    get actors() {
-        const { lobby } = this;
-        const players = lobby
-            .playersList
-            .map(player => player.serialize());
-        const [firstPlayer, secondPlayer] = players;
-        const actors = {
-            [_interfaces__WEBPACK_IMPORTED_MODULE_0__.GameSide.Bottom]: firstPlayer,
-            [_interfaces__WEBPACK_IMPORTED_MODULE_0__.GameSide.Top]: secondPlayer,
-        };
-        return actors;
     }
 }
 
@@ -184,72 +274,27 @@ class Room {
   \***********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-/* unused harmony export RoomsManager */
-/* harmony import */ var _interfaces__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #interfaces */ "../shared/interfaces/index.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! #utils */ "../shared/utils/index.ts");
-/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services */ "./services/index.ts");
-/* harmony import */ var _users_manager__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./users-manager */ "./entities/users-manager.ts");
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "RoomsManager": () => (/* binding */ RoomsManager)
+/* harmony export */ });
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #utils */ "../shared/utils/index.ts");
 
-
-
-
-const removeRoomTimeoutSec = 60 * 1000;
 var RoomsManager;
 (function (RoomsManager) {
-    const roomsSet = new _utils__WEBPACK_IMPORTED_MODULE_1__.ObjectSet([]);
+    const roomsSet = new _utils__WEBPACK_IMPORTED_MODULE_0__.ObjectSet([]);
     RoomsManager.getList = () => roomsSet.elements;
     RoomsManager.getShortInfoList = () => roomsSet.elements.map(room => room.shortInfo);
     RoomsManager.find = (id) => roomsSet.find(id);
-    RoomsManager.broadcastAll = (users = _users_manager__WEBPACK_IMPORTED_MODULE_3__.UsersManager.getList()) => __awaiter(this, void 0, void 0, function* () {
-        return (0,_services__WEBPACK_IMPORTED_MODULE_2__.broadcastService)({
-            users,
-            message: {
-                type: _interfaces__WEBPACK_IMPORTED_MODULE_0__.ServerMessageType.RoomsList,
-                data: {
-                    rooms: RoomsManager.getShortInfoList(),
-                }
-            }
-        });
-    });
-    RoomsManager.addRoomAndNotifyUsers = (room) => __awaiter(this, void 0, void 0, function* () {
+    RoomsManager.findRoomWithUser = (userId) => {
+        const room = roomsSet.elements.find((room) => room.lobby.hasPlayer(userId));
+        return room;
+    };
+    RoomsManager.addRoom = (room) => {
         roomsSet.insert(room);
-        yield RoomsManager.broadcastAll();
-    });
-    RoomsManager.removeRoomAndNotifyUsers = (id) => __awaiter(this, void 0, void 0, function* () {
+    };
+    RoomsManager.removeRoom = (id) => {
         roomsSet.remove(id);
-        yield RoomsManager.broadcastAll();
-    });
-    RoomsManager.removeUserFromRooms = (userId) => __awaiter(this, void 0, void 0, function* () {
-        const roomsList = RoomsManager.getList();
-        const roomsWithUser = roomsList.filter(room => room.lobby.hasUser(userId));
-        const noRoomsWithUser = !roomsWithUser.length;
-        if (noRoomsWithUser) {
-            return;
-        }
-        roomsWithUser.forEach((room) => {
-            const { lobby } = room;
-            lobby.removeUser(userId);
-            const noPlayersAfterRemove = lobby.playersList.length === 0;
-            if (noPlayersAfterRemove) {
-                setTimeout(() => {
-                    const noPlayersAfterTimeout = lobby.playersList.length === 0;
-                    if (noPlayersAfterTimeout) {
-                        RoomsManager.removeRoomAndNotifyUsers(room.id);
-                    }
-                }, removeRoomTimeoutSec);
-            }
-            (0,_services__WEBPACK_IMPORTED_MODULE_2__.broadcastRoomFullInfo)(room, lobby.allMembersList);
-        });
-    });
+    };
 })(RoomsManager || (RoomsManager = {}));
 
 
@@ -273,13 +318,30 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+const mockCommunicator = {
+    closeConnection: () => { },
+    send: (message) => __awaiter(void 0, void 0, void 0, function* () {
+        return {
+            success: true,
+            message,
+            receiverId: '',
+        };
+    })
+};
 class User {
     constructor(data) {
         const { id, token, name, communicator } = data;
         this.id = id;
         this.token = token;
         this.name = name;
-        this.communicator = communicator;
+        this.communicator = communicator !== null && communicator !== void 0 ? communicator : mockCommunicator;
+    }
+    get wasConnected() {
+        return this.communicator != mockCommunicator;
+    }
+    changeCommunicator(newCommunicator) {
+        this.communicator.closeConnection();
+        this.communicator = newCommunicator;
     }
     serialize() {
         const { id, name } = this;
@@ -323,6 +385,469 @@ var UsersManager;
 
 /***/ }),
 
+/***/ "./handlers/check-token.ts":
+/*!*********************************!*\
+  !*** ./handlers/check-token.ts ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "checkToken": () => (/* binding */ checkToken)
+/* harmony export */ });
+/* harmony import */ var _schemas__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schemas */ "./schemas/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../entities */ "./entities/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+const checkToken = {
+    noAuth: true,
+    schema: _schemas__WEBPACK_IMPORTED_MODULE_0__.clientSchemas.checkToken,
+    callback: ({ messageData }) => __awaiter(void 0, void 0, void 0, function* () {
+        const { token } = messageData;
+        const user = _entities__WEBPACK_IMPORTED_MODULE_1__.UsersManager.find(token);
+        if (!user) {
+            return {
+                valid: false,
+            };
+        }
+        return Object.assign({ valid: true }, user.serialize());
+    }),
+};
+
+
+/***/ }),
+
+/***/ "./handlers/create-room.ts":
+/*!*********************************!*\
+  !*** ./handlers/create-room.ts ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "createRoom": () => (/* binding */ createRoom)
+/* harmony export */ });
+/* harmony import */ var _schemas__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schemas */ "./schemas/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../entities */ "./entities/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+const createRoom = {
+    schema: _schemas__WEBPACK_IMPORTED_MODULE_0__.clientSchemas.createRoom,
+    callback: ({ messageData, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+        const { title, password } = messageData;
+        const room = new _entities__WEBPACK_IMPORTED_MODULE_1__.Room({
+            creator: sender,
+            title,
+            password,
+        });
+        _entities__WEBPACK_IMPORTED_MODULE_1__.RoomsManager.addRoom(room);
+        return {
+            roomInfo: room.fullInfo,
+        };
+    }),
+};
+
+
+/***/ }),
+
+/***/ "./handlers/get-rooms.ts":
+/*!*******************************!*\
+  !*** ./handlers/get-rooms.ts ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "getRooms": () => (/* binding */ getRooms)
+/* harmony export */ });
+/* harmony import */ var _schemas__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schemas */ "./schemas/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../entities */ "./entities/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+const getRooms = {
+    schema: _schemas__WEBPACK_IMPORTED_MODULE_0__.clientSchemas.getRooms,
+    callback: () => __awaiter(void 0, void 0, void 0, function* () {
+        const rooms = _entities__WEBPACK_IMPORTED_MODULE_1__.RoomsManager.getShortInfoList();
+        return {
+            rooms,
+        };
+    }),
+};
+
+
+/***/ }),
+
+/***/ "./handlers/index.ts":
+/*!***************************!*\
+  !*** ./handlers/index.ts ***!
+  \***************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "handlersMap": () => (/* binding */ handlersMap)
+/* harmony export */ });
+/* harmony import */ var _interfaces__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #interfaces */ "../shared/interfaces/index.ts");
+/* harmony import */ var _check_token__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./check-token */ "./handlers/check-token.ts");
+/* harmony import */ var _create_room__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./create-room */ "./handlers/create-room.ts");
+/* harmony import */ var _get_rooms__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./get-rooms */ "./handlers/get-rooms.ts");
+/* harmony import */ var _join_room__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./join-room */ "./handlers/join-room.ts");
+/* harmony import */ var _log_in__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./log-in */ "./handlers/log-in.ts");
+/* harmony import */ var _make_step__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./make-step */ "./handlers/make-step.ts");
+/* harmony import */ var _swap_players__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./swap-players */ "./handlers/swap-players.ts");
+
+
+
+
+
+
+
+
+const handlersMap = {
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.CheckToken]: _check_token__WEBPACK_IMPORTED_MODULE_1__.checkToken,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.CreateRoom]: _create_room__WEBPACK_IMPORTED_MODULE_2__.createRoom,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.GetRooms]: _get_rooms__WEBPACK_IMPORTED_MODULE_3__.getRooms,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.JoinRoom]: _join_room__WEBPACK_IMPORTED_MODULE_4__.joinRoom,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.LogIn]: _log_in__WEBPACK_IMPORTED_MODULE_5__.logIn,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.MakeStep]: _make_step__WEBPACK_IMPORTED_MODULE_6__.makeStep,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.SwapPlayers]: _swap_players__WEBPACK_IMPORTED_MODULE_7__.swapPlayers,
+};
+
+
+/***/ }),
+
+/***/ "./handlers/join-room.ts":
+/*!*******************************!*\
+  !*** ./handlers/join-room.ts ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "joinRoom": () => (/* binding */ joinRoom)
+/* harmony export */ });
+/* harmony import */ var _schemas__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schemas */ "./schemas/index.ts");
+/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services */ "./services/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../entities */ "./entities/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+const joinRoom = {
+    schema: _schemas__WEBPACK_IMPORTED_MODULE_0__.clientSchemas.joinRoom,
+    callback: ({ messageData, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+        const { roomId, password } = messageData;
+        const room = _entities__WEBPACK_IMPORTED_MODULE_2__.RoomsManager.find(roomId);
+        if (!room) {
+            return {
+                joined: false,
+                reason: 'Комната не найдена',
+            };
+        }
+        const { lobby } = room;
+        if (!lobby.checkPassword(password)) {
+            return {
+                joined: false,
+                reason: 'Неправильный пароль',
+            };
+        }
+        if (!lobby.hasPlace) {
+            return {
+                joined: false,
+                reason: 'Комната заполнена',
+            };
+        }
+        if (lobby.hasPlayer(sender.id)) {
+            return {
+                joined: false,
+                reason: 'Вы уже в этой комнате',
+            };
+        }
+        const joined = lobby.addPlayer(sender, password);
+        if (!joined) {
+            return {
+                joined: false,
+                reason: 'Непредвиденная ошибка',
+            };
+        }
+        const { playersList } = lobby;
+        console.log('lobby:', playersList);
+        const result = yield (0,_services__WEBPACK_IMPORTED_MODULE_1__.broadcastRoomFullInfo)(room, playersList);
+        console.log('broadcast result', result);
+        return {
+            joined: true,
+            roomInfo: room.fullInfo,
+        };
+    }),
+};
+
+
+/***/ }),
+
+/***/ "./handlers/log-in.ts":
+/*!****************************!*\
+  !*** ./handlers/log-in.ts ***!
+  \****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "logIn": () => (/* binding */ logIn)
+/* harmony export */ });
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #utils */ "../shared/utils/index.ts");
+/* harmony import */ var _schemas__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../schemas */ "./schemas/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../entities */ "./entities/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+const logIn = {
+    noAuth: true,
+    schema: _schemas__WEBPACK_IMPORTED_MODULE_1__.clientSchemas.logIn,
+    callback: ({ messageData }) => __awaiter(void 0, void 0, void 0, function* () {
+        const id = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUniqueString)();
+        const token = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUniqueString)();
+        const { name } = messageData;
+        const user = new _entities__WEBPACK_IMPORTED_MODULE_2__.User({
+            id,
+            token,
+            name,
+            communicator: null,
+        });
+        _entities__WEBPACK_IMPORTED_MODULE_2__.UsersManager.add(user);
+        // Если пользователь не подключился за указанное время, удаляем его
+        setTimeout(() => {
+            if (!user.wasConnected) {
+                _entities__WEBPACK_IMPORTED_MODULE_2__.UsersManager.remove(token);
+            }
+        }, 30 * 1000);
+        return {
+            id,
+            token,
+            name,
+        };
+    }),
+};
+
+
+/***/ }),
+
+/***/ "./handlers/make-step.ts":
+/*!*******************************!*\
+  !*** ./handlers/make-step.ts ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "makeStep": () => (/* binding */ makeStep)
+/* harmony export */ });
+/* harmony import */ var _interfaces__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #interfaces */ "../shared/interfaces/index.ts");
+/* harmony import */ var _schemas__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../schemas */ "./schemas/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../entities */ "./entities/index.ts");
+/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../services */ "./services/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+const makeStep = {
+    schema: _schemas__WEBPACK_IMPORTED_MODULE_1__.clientSchemas.makeStep,
+    callback: ({ messageData, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+        const { roomId, move } = messageData;
+        const room = _entities__WEBPACK_IMPORTED_MODULE_2__.RoomsManager.find(roomId);
+        if (!room) {
+            return { success: false };
+        }
+        const successStep = room.makeStep(sender, move);
+        if (!successStep) {
+            return { success: false };
+        }
+        const { playersList } = room.lobby;
+        yield (0,_services__WEBPACK_IMPORTED_MODULE_3__.broadcastRoomFullInfo)(room, playersList);
+        const { winner } = room;
+        if (winner) {
+            yield (0,_services__WEBPACK_IMPORTED_MODULE_3__.broadcastService)({
+                users: playersList,
+                message: {
+                    type: _interfaces__WEBPACK_IMPORTED_MODULE_0__.ServerMessageType.GameOver,
+                    data: {
+                        roomId: room.id,
+                        winner,
+                    }
+                }
+            });
+        }
+        return {
+            success: true,
+        };
+    }),
+};
+
+
+/***/ }),
+
+/***/ "./handlers/swap-players.ts":
+/*!**********************************!*\
+  !*** ./handlers/swap-players.ts ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "swapPlayers": () => (/* binding */ swapPlayers)
+/* harmony export */ });
+/* harmony import */ var _schemas__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schemas */ "./schemas/index.ts");
+/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services */ "./services/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../entities */ "./entities/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+const swapPlayers = {
+    schema: _schemas__WEBPACK_IMPORTED_MODULE_0__.clientSchemas.swapPlayers,
+    callback: ({ messageData, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+        const { roomId } = messageData;
+        const room = _entities__WEBPACK_IMPORTED_MODULE_2__.RoomsManager.find(roomId);
+        if (!room) {
+            return { swapped: false };
+        }
+        if (room.creator.id != sender.id) {
+            return { swapped: false };
+        }
+        const { lobby } = room;
+        lobby.swapUsers();
+        yield (0,_services__WEBPACK_IMPORTED_MODULE_1__.broadcastRoomFullInfo)(room, lobby.playersList);
+        return { swapped: true };
+    }),
+};
+
+
+/***/ }),
+
+/***/ "./schemas/from-client.ts":
+/*!********************************!*\
+  !*** ./schemas/from-client.ts ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "checkToken": () => (/* binding */ checkToken),
+/* harmony export */   "createRoom": () => (/* binding */ createRoom),
+/* harmony export */   "getRooms": () => (/* binding */ getRooms),
+/* harmony export */   "joinRoom": () => (/* binding */ joinRoom),
+/* harmony export */   "logIn": () => (/* binding */ logIn),
+/* harmony export */   "makeStep": () => (/* binding */ makeStep),
+/* harmony export */   "swapPlayers": () => (/* binding */ swapPlayers)
+/* harmony export */ });
+/* harmony import */ var joi__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! joi */ "joi");
+/* harmony import */ var joi__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(joi__WEBPACK_IMPORTED_MODULE_0__);
+
+const requiredString = joi__WEBPACK_IMPORTED_MODULE_0___default().string().min(1).required();
+const password = joi__WEBPACK_IMPORTED_MODULE_0___default().string().allow('');
+const checkToken = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
+    token: requiredString,
+});
+const createRoom = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
+    title: joi__WEBPACK_IMPORTED_MODULE_0___default().string()
+        .min(1)
+        .required(),
+    password,
+});
+const getRooms = joi__WEBPACK_IMPORTED_MODULE_0___default().object({});
+const joinRoom = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
+    roomId: requiredString,
+    password,
+});
+const logIn = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
+    name: requiredString,
+});
+// [number, number]
+const position = joi__WEBPACK_IMPORTED_MODULE_0___default().array()
+    .items(joi__WEBPACK_IMPORTED_MODULE_0___default().number().required(), joi__WEBPACK_IMPORTED_MODULE_0___default().number().required())
+    .required();
+const move = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
+    from: position,
+    to: position,
+});
+const makeStep = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
+    roomId: requiredString,
+    move,
+});
+const swapPlayers = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
+    roomId: requiredString,
+});
+
+
+/***/ }),
+
+/***/ "./schemas/index.ts":
+/*!**************************!*\
+  !*** ./schemas/index.ts ***!
+  \**************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "clientSchemas": () => (/* reexport module object */ _from_client__WEBPACK_IMPORTED_MODULE_0__)
+/* harmony export */ });
+/* harmony import */ var _from_client__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./from-client */ "./schemas/from-client.ts");
+
+
+
+
+/***/ }),
+
 /***/ "./services/broadcast-room-full-info.ts":
 /*!**********************************************!*\
   !*** ./services/broadcast-room-full-info.ts ***!
@@ -360,7 +885,6 @@ const broadcastRoomFullInfo = (room, users) => {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "broadcastService": () => (/* binding */ broadcastService)
 /* harmony export */ });
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #utils */ "../shared/utils/index.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -370,10 +894,8 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-
 const broadcastService = ({ users, message, }) => __awaiter(void 0, void 0, void 0, function* () {
-    const usersList = users instanceof _utils__WEBPACK_IMPORTED_MODULE_0__.ReadonlyObjectSet ? users.elements : users;
-    const promises = usersList.map(user => user.sendMessage(message));
+    const promises = users.map(user => user.sendMessage(message));
     const results = yield Promise.all(promises);
     const notSentMessages = results.filter(result => !result.success);
     return {
@@ -419,6 +941,9 @@ class WebsocketCommunicator {
         const { socket, receiverId } = data;
         this.socket = socket;
         this.receiverId = receiverId;
+    }
+    closeConnection() {
+        this.socket.terminate();
     }
     send(message) {
         return new Promise((resolve) => {
@@ -538,6 +1063,7 @@ class Game {
     get winnerSide() { return this._winnerSide; }
     get turnOf() { return this._turnOf; }
     constructor(data) {
+        this._winnerSide = null;
         const { config, turnOf, table, units, lockedUnit } = data;
         this.config = config;
         this._turnOf = turnOf;
@@ -634,7 +1160,7 @@ class Game {
         }
         const availableStepsMap = this.findAvailableSteps(selectedUnit.side);
         const availableStepsOfUnit = availableStepsMap[selectedUnit.id];
-        if (!availableStepsOfUnit) {
+        if (!availableStepsOfUnit.length) {
             return false;
         }
         const selectedStep = availableStepsOfUnit
@@ -1002,6 +1528,7 @@ var GameSide;
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "ClientMessageType": () => (/* reexport safe */ _messages__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType),
 /* harmony export */   "GameSide": () => (/* reexport safe */ _game__WEBPACK_IMPORTED_MODULE_1__.GameSide),
 /* harmony export */   "ServerMessageType": () => (/* reexport safe */ _messages__WEBPACK_IMPORTED_MODULE_0__.ServerMessageType),
 /* harmony export */   "StepType": () => (/* reexport safe */ _step__WEBPACK_IMPORTED_MODULE_4__.StepType),
@@ -1036,13 +1563,18 @@ var GameSide;
   \******************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-/* unused harmony export ClientMessageType */
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "ClientMessageType": () => (/* binding */ ClientMessageType)
+/* harmony export */ });
 var ClientMessageType;
 (function (ClientMessageType) {
     ClientMessageType["LogIn"] = "LogIn";
-    ClientMessageType["CreateRoom"] = "createRoom";
-    ClientMessageType["JoinRoom"] = "joinRoom";
-    ClientMessageType["MakeStep"] = "makeStep";
+    ClientMessageType["CheckToken"] = "CheckToken";
+    ClientMessageType["CreateRoom"] = "CreateRoom";
+    ClientMessageType["GetRooms"] = "GetRooms";
+    ClientMessageType["JoinRoom"] = "JoinRoom";
+    ClientMessageType["SwapPlayers"] = "SwapPlayers";
+    ClientMessageType["MakeStep"] = "MakeStep";
 })(ClientMessageType || (ClientMessageType = {}));
 
 
@@ -1057,21 +1589,13 @@ var ClientMessageType;
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "ServerMessageType": () => (/* binding */ ServerMessageType)
 /* harmony export */ });
-/* unused harmony export ToastLevel */
 var ServerMessageType;
 (function (ServerMessageType) {
-    ServerMessageType["RoomsList"] = "roomsList";
     ServerMessageType["UserData"] = "userData";
     ServerMessageType["RoomData"] = "roomData";
     ServerMessageType["GameOver"] = "gameOver";
-    ServerMessageType["Toast"] = "toast";
+    ServerMessageType["CreatorLeft"] = "creatorLeft";
 })(ServerMessageType || (ServerMessageType = {}));
-var ToastLevel;
-(function (ToastLevel) {
-    ToastLevel["Light"] = "light";
-    ToastLevel["Success"] = "success";
-    ToastLevel["Info"] = "info";
-})(ToastLevel || (ToastLevel = {}));
 
 
 /***/ }),
@@ -1083,6 +1607,7 @@ var ToastLevel;
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "ClientMessageType": () => (/* reexport safe */ _client_server__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType),
 /* harmony export */   "ServerMessageType": () => (/* reexport safe */ _from_server__WEBPACK_IMPORTED_MODULE_1__.ServerMessageType)
 /* harmony export */ });
 /* harmony import */ var _client_server__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./client-server */ "../shared/interfaces/messages/client-server.ts");
@@ -1097,14 +1622,9 @@ var ToastLevel;
 /*!************************************!*\
   !*** ../shared/interfaces/room.ts ***!
   \************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (() => {
 
-/* unused harmony export RoleInRoom */
-var RoleInRoom;
-(function (RoleInRoom) {
-    RoleInRoom["Player"] = "player";
-    RoleInRoom["Spectator"] = "spectator";
-})(RoleInRoom || (RoleInRoom = {}));
+
 
 
 /***/ }),
@@ -1261,9 +1781,9 @@ const getUniqueString = () => {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "ObjectSet": () => (/* reexport safe */ _object_set__WEBPACK_IMPORTED_MODULE_2__.ObjectSet),
-/* harmony export */   "ReadonlyObjectSet": () => (/* reexport safe */ _object_set__WEBPACK_IMPORTED_MODULE_2__.ReadonlyObjectSet),
 /* harmony export */   "generateInitialUnits": () => (/* reexport safe */ _generate_initial_units__WEBPACK_IMPORTED_MODULE_4__.generateInitialUnits),
 /* harmony export */   "getUniqueString": () => (/* reexport safe */ _get_unique_string__WEBPACK_IMPORTED_MODULE_0__.getUniqueString),
+/* harmony export */   "logError": () => (/* reexport safe */ _log_error__WEBPACK_IMPORTED_MODULE_1__.logError),
 /* harmony export */   "samePos": () => (/* reexport safe */ _position_utils__WEBPACK_IMPORTED_MODULE_3__.samePos)
 /* harmony export */ });
 /* harmony import */ var _get_unique_string__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./get-unique-string */ "../shared/utils/get-unique-string.ts");
@@ -1286,7 +1806,9 @@ const getUniqueString = () => {
   \************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-/* unused harmony export logError */
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "logError": () => (/* binding */ logError)
+/* harmony export */ });
 const logError = (text, err) => {
     let errInfo = err;
     if (err instanceof Error) {
@@ -1305,9 +1827,9 @@ const logError = (text, err) => {
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ObjectSet": () => (/* binding */ ObjectSet),
-/* harmony export */   "ReadonlyObjectSet": () => (/* binding */ ReadonlyObjectSet)
+/* harmony export */   "ObjectSet": () => (/* binding */ ObjectSet)
 /* harmony export */ });
+/* unused harmony export ReadonlyObjectSet */
 /* Как Set, только для работы с объектами по id */
 class ReadonlyObjectSet {
     get elements() { return this._elements.slice(); }
@@ -1369,6 +1891,16 @@ const samePos = (pos1, pos2) => {
 
 /***/ }),
 
+/***/ "cors":
+/*!***********************!*\
+  !*** external "cors" ***!
+  \***********************/
+/***/ ((module) => {
+
+module.exports = require("cors");
+
+/***/ }),
+
 /***/ "express":
 /*!**************************!*\
   !*** external "express" ***!
@@ -1376,6 +1908,16 @@ const samePos = (pos1, pos2) => {
 /***/ ((module) => {
 
 module.exports = require("express");
+
+/***/ }),
+
+/***/ "joi":
+/*!**********************!*\
+  !*** external "joi" ***!
+  \**********************/
+/***/ ((module) => {
+
+module.exports = require("joi");
 
 /***/ }),
 
@@ -1456,9 +1998,13 @@ var __webpack_exports__ = {};
 /* harmony import */ var ws__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(ws__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var express__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! express */ "express");
 /* harmony import */ var express__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(express__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! #utils */ "../shared/utils/index.ts");
-/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./services */ "./services/index.ts");
-/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./entities */ "./entities/index.ts");
+/* harmony import */ var cors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! cors */ "cors");
+/* harmony import */ var cors__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(cors__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! #utils */ "../shared/utils/index.ts");
+/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./services */ "./services/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./entities */ "./entities/index.ts");
+/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./app */ "./app.ts");
+/* harmony import */ var _shared_interfaces_messages__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../shared/interfaces/messages */ "../shared/interfaces/messages/index.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -1473,12 +2019,15 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
+
+
 const httpServer = express__WEBPACK_IMPORTED_MODULE_1___default()();
 httpServer.use(express__WEBPACK_IMPORTED_MODULE_1___default().json());
+httpServer.use(cors__WEBPACK_IMPORTED_MODULE_2___default()());
 httpServer.post('/game', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const token = req.headers['authorization'];
-    // const result = await handleMessage(req.body, token);
-    const result = { some: 'body', once: 'told me' };
+    const result = yield (0,_app__WEBPACK_IMPORTED_MODULE_6__.handleMessage)(req.body, token);
     if (typeof result === 'object') {
         res.status(200).send(JSON.stringify(result));
     }
@@ -1491,14 +2040,45 @@ const wsServer = new (ws__WEBPACK_IMPORTED_MODULE_0___default().Server)({
     port: 7001,
 });
 wsServer.on('connection', (socket, req) => {
-    const id = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getUniqueString)();
-    const token = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getUniqueString)();
-    const communicator = new _services__WEBPACK_IMPORTED_MODULE_3__.WebsocketCommunicator({
-        socket,
-        receiverId: id,
-    });
-    const user = new _entities__WEBPACK_IMPORTED_MODULE_4__.User({ id, token, name: 'Unnamed', communicator });
-    _entities__WEBPACK_IMPORTED_MODULE_4__.UsersManager.add(user);
+    try {
+        const reqUrl = new URL(req.url, `http://${req.headers.host}`);
+        const token = reqUrl.searchParams.get('token');
+        if (!token) {
+            console.log('no token', req.url);
+            socket.terminate();
+            return;
+        }
+        const user = _entities__WEBPACK_IMPORTED_MODULE_5__.UsersManager.find(token);
+        if (!user) {
+            console.log('no user', token);
+            socket.terminate();
+            return;
+        }
+        const communicator = new _services__WEBPACK_IMPORTED_MODULE_4__.WebsocketCommunicator({
+            socket,
+            receiverId: user.id,
+        });
+        user.changeCommunicator(communicator);
+        user.sendMessage({
+            type: _shared_interfaces_messages__WEBPACK_IMPORTED_MODULE_7__.ServerMessageType.UserData,
+            data: {
+                userData: user.serialize(),
+            },
+        });
+        // Если пользователь переподключился во время игры, отправляем ему данные его комнаты
+        const roomWithUser = _entities__WEBPACK_IMPORTED_MODULE_5__.RoomsManager.findRoomWithUser(user.id);
+        if (roomWithUser) {
+            user.sendMessage({
+                type: _shared_interfaces_messages__WEBPACK_IMPORTED_MODULE_7__.ServerMessageType.RoomData,
+                data: {
+                    roomFullInfo: roomWithUser.fullInfo,
+                }
+            });
+        }
+    }
+    catch (err) {
+        (0,_utils__WEBPACK_IMPORTED_MODULE_3__.logError)('error wsServer on connection', err);
+    }
 });
 
 })();

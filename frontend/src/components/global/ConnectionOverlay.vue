@@ -1,6 +1,6 @@
 <template>
   <MyModal
-    :shown="connectionState == ConnectionState.Connecting"
+    v-if="connectionState == ConnectionState.Connecting"
     hide-header
   >
     <div class="modal-content">
@@ -9,7 +9,7 @@
   </MyModal>
 
   <MyModal
-    :shown="connectionState == ConnectionState.Disconnected"
+    v-if="connectionState == ConnectionState.Disconnected"
     hide-header
   >
     <div class="modal-content">
@@ -22,9 +22,8 @@
 </template>
 
 <script lang="ts" setup>
-import MyModal from './MyModal.vue';
-import { connectionState, ConnectionState, reconnect } from '../modules'
-import MyButton from './MyButton.vue';
+import { MyButton, MyModal } from '../common';
+import { connectionState, ConnectionState, reconnect } from '@/modules';
 </script>
 
 <style scoped>

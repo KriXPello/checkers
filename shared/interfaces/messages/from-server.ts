@@ -34,7 +34,6 @@ export type IServerMessageDataMap = {
   [ServerMessageType.CreatorLeft]: IServerMessageData.CreatorLeft,
 };
 
-export type IServerMessage<T extends ServerMessageType = ServerMessageType> = {
-  type: T,
-  data: IServerMessageDataMap[T],
-};
+type IServerMessageMap = { [T in ServerMessageType]: { type: T, data: IServerMessageDataMap[T]; } };
+
+export type IServerMessage = IServerMessageMap[keyof IServerMessageMap];

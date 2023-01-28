@@ -1,14 +1,14 @@
-import { GameSide } from '../../shared/interfaces/game';
+import { GameSide, IActors } from '#interfaces';
 import { User } from './user';
 
 interface LobbyData {
   creator: User,
-  password: string | undefined,
+  password: string | null | undefined,
 }
 
 export class RoomLobby {
   private players: Record<GameSide, User | null>;
-  private password: string | undefined;
+  private password: string | null;
 
   constructor(data: LobbyData) {
     const { creator, password } = data;
@@ -17,7 +17,7 @@ export class RoomLobby {
       [GameSide.Top]: creator,
       [GameSide.Bottom]: null,
     };
-    this.password = password;
+    this.password = password || null;
   }
 
   public get isSecured(): boolean {
@@ -25,10 +25,20 @@ export class RoomLobby {
   }
 
   public get playersList(): User[] {
-    const list = Object.values(this.players)
-      .filter(player => player != null) as User[];
+    const { top, bottom } = this.players;
+    const list = [];
+    if (top) list.push(top);
+    if (bottom) list.push(bottom);
 
     return list;
+  }
+
+  public get actors(): IActors {
+    const { bottom, top } = this.players;
+    return {
+      [GameSide.Top]: top?.serialize() ?? null,
+      [GameSide.Bottom]: bottom?.serialize() ?? null,
+    };
   }
 
   public get hasPlace(): boolean {
@@ -43,8 +53,18 @@ export class RoomLobby {
   }
 
   public addPlayer(user: User, password: string | undefined): boolean {
-    if (this.hasPlace || this.hasPlayer(user.id) || !this.checkPassword(password)) {
+    if (!this.hasPlace || this.hasPlayer(user.id) || !this.checkPassword(password)) {
       return false;
+    }
+
+    const { top, bottom } = this.players;
+
+    if (!top) {
+      this.players[GameSide.Top] = user;
+    }
+
+    if (!bottom) {
+      this.players[GameSide.Bottom] = user;
     }
 
     return true;

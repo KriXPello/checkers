@@ -6,7 +6,7 @@ import { User } from './user';
 
 interface ConstructorData {
   title: string,
-  password: string | undefined,
+  password: string | null | undefined,
   creator: User,
 }
 
@@ -49,7 +49,7 @@ export class Room {
       return false;
     }
 
-    const activeActor = this.actors[this.game.turnOf];
+    const activeActor = this.lobby.actors[this.game.turnOf];
     const isActiveActor = activeActor && activeActor.id === initiator.id;
     if (!isActiveActor) {
       return false;
@@ -66,8 +66,9 @@ export class Room {
   };
 
   public get winner(): IUser | null {
-    const { actors, game } = this;
+    const { game, lobby } = this;
     const { winnerSide } = game;
+    const { actors } = lobby;
     return winnerSide && actors[winnerSide];
   }
 
@@ -82,7 +83,8 @@ export class Room {
   }
 
   public get fullInfo(): IRoomFullInfo {
-    const { baseInfo, game, actors, creator } = this;
+    const { baseInfo, game, creator, lobby } = this;
+    const { actors } = lobby;
 
     const gameSnapshot = game.snapshot();
 
@@ -98,21 +100,5 @@ export class Room {
     const { id, title } = this;
     const { isSecured } = this.lobby;
     return { id, title, isSecured };
-  }
-
-  private get actors(): IActors {
-    const { lobby } = this;
-
-    const players = lobby
-      .playersList
-      .map(player => player.serialize());
-    const [firstPlayer, secondPlayer] = players;
-
-    const actors: IActors = {
-      [GameSide.Bottom]: firstPlayer,
-      [GameSide.Top]: secondPlayer,
-    };
-
-    return actors;
   }
 }

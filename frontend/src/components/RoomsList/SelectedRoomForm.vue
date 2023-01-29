@@ -20,18 +20,15 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router'
 import { ClientMessageType, type IRoomShortInfo } from '#interfaces';
 import { MyButton, MyInput } from '../common';
-import { roomData, sendingMessage, sendMessage } from '@/modules';
-import { Route } from '@/constants';
+import { roomData, sendingMessage, sendMessage, route, Route } from '@/modules';
 
 const props = defineProps<{
   room: IRoomShortInfo,
 }>()
 
 const password = ref('');
-const router = useRouter();
 
 const join = async () => {
   const result = await sendMessage({
@@ -51,7 +48,7 @@ const join = async () => {
   if (data.joined) {
     roomData.value = data.roomInfo;
 
-    router.replace(Route.GameRoom);
+    route.value = Route.GameRoom;
   } else {
     alert(data.reason);
   }

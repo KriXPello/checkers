@@ -11,14 +11,21 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router'
 import { ClientMessageType } from '#interfaces';
-import { sendMessage, userData, sendingMessage, connectionState, connect, saveToken, ConnectionState } from '@/modules';
+import {
+  sendMessage,
+  userData,
+  sendingMessage,
+  connectionState,
+  connect,
+  saveToken,
+  ConnectionState,
+  route,
+  Route,
+} from '@/modules';
 import { MyButton, MyInput } from '../components';
 
 const nameInput = ref('');
-
-const router = useRouter();
 
 const login = async () => {
   const result = await sendMessage({
@@ -40,7 +47,7 @@ const login = async () => {
       nameInput.value = '';
       saveToken(token);
 
-      router.replace('/rooms');
+      route.value = Route.RoomsList;
     } else {
       alert('Не удалось подключиться');
     }

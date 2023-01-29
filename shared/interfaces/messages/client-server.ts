@@ -1,4 +1,4 @@
-import { GameSide, IRoomFullInfo, IRoomShortInfo } from '#interfaces';
+import { IRoomFullInfo, IRoomShortInfo } from '#interfaces';
 import { IMove } from '../helpers';
 
 export enum ClientMessageType {
@@ -7,6 +7,7 @@ export enum ClientMessageType {
   CreateRoom = 'CreateRoom',
   GetRooms = 'GetRooms',
   JoinRoom = 'JoinRoom',
+  LeaveRoom = 'LeaveRoom',
   SwapPlayers = 'SwapPlayers',
   MakeStep = 'MakeStep',
 }
@@ -34,6 +35,10 @@ export namespace IClientMessageData {
     password?: string,
   }
 
+  export interface LeaveRoom {
+    roomId: string,
+  }
+
   export interface SwapPlayers {
     roomId: string,
   }
@@ -50,6 +55,7 @@ export type IClientMessageDataMap = {
   [ClientMessageType.CreateRoom]: IClientMessageData.CreateRoom,
   [ClientMessageType.GetRooms]: IClientMessageData.GetRooms,
   [ClientMessageType.JoinRoom]: IClientMessageData.JoinRoom,
+  [ClientMessageType.LeaveRoom]: IClientMessageData.LeaveRoom,
   [ClientMessageType.SwapPlayers]: IClientMessageData.SwapPlayers,
   [ClientMessageType.MakeStep]: IClientMessageData.MakeStep,
 };
@@ -72,6 +78,7 @@ export namespace IServerResponse {
     valid: true,
     id: string,
     name: string,
+    activeRoom?: IRoomFullInfo,
   };
 
   export interface CreateRoom {
@@ -90,6 +97,10 @@ export namespace IServerResponse {
     roomInfo: IRoomFullInfo,
   };
 
+  export type LeaveRoom = {
+    leaved: boolean,
+  };
+
   export interface SwapPlayers {
     swapped: boolean,
   }
@@ -105,6 +116,7 @@ export type IServerResponseMap = {
   [ClientMessageType.CreateRoom]: IServerResponse.CreateRoom,
   [ClientMessageType.GetRooms]: IServerResponse.GetRooms,
   [ClientMessageType.JoinRoom]: IServerResponse.JoinRoom,
+  [ClientMessageType.LeaveRoom]: IServerResponse.LeaveRoom,
   [ClientMessageType.SwapPlayers]: IServerResponse.SwapPlayers,
   [ClientMessageType.MakeStep]: IServerResponse.MakeStep,
 };

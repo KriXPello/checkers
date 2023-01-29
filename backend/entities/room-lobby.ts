@@ -57,20 +57,19 @@ export class RoomLobby {
       return false;
     }
 
-    const { top, bottom } = this.players;
+    for (const key in this.players) {
+      const side = key as GameSide;
 
-    if (!top) {
-      this.players[GameSide.Top] = user;
+      if (this.players[side] == null) {
+        this.players[side] = user;
+        return true;
+      }
     }
 
-    if (!bottom) {
-      this.players[GameSide.Bottom] = user;
-    }
-
-    return true;
+    return false;
   }
 
-  public removeUser(id: string): User | null {
+  public removeUser(id: string): boolean {
     for (const key in this.players) {
       const side = key as GameSide;
 
@@ -78,11 +77,11 @@ export class RoomLobby {
       if (player?.id == id) {
         this.players[side] = null;
 
-        return player;
+        return true;
       }
     }
 
-    return null;
+    return false;
   }
 
   public swapUsers() {

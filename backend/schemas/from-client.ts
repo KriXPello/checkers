@@ -26,6 +26,10 @@ export const joinRoom = joi.object<IClientMessageData.JoinRoom>({
   password,
 });
 
+export const leaveRoom = joi.object<IClientMessageData.LeaveRoom>({
+  roomId: requiredString,
+});
+
 export const logIn = joi.object<IClientMessageData.LogIn>({
   name: requiredString,
 });

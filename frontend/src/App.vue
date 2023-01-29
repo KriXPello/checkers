@@ -4,25 +4,35 @@
   </header> -->
 
   <div id="router-wrapper">
-    <RouterView />
+    <GameRoom v-if="route == Route.GameRoom" />
+    <Home v-if="route == Route.Home" />
+    <RoomsList v-if="route == Route.RoomsList" />
+
+    <MyModal v-if="errorText">
+      <span>{{ errorText }}</span>
+
+      <MyButton @click="init">Повторить</MyButton>
+    </MyModal>
 
     <ConnectionOverlay />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount } from 'vue';
-import { useRouter } from 'vue-router'
+import { onBeforeMount, ref } from 'vue';
 import { ClientMessageType } from '#interfaces';
-import { ConnectionOverlay } from './components';
-import { clearToken, connect, extractToken, sendMessage, userData } from './modules';
-import { Route } from './constants';
+import { ConnectionOverlay, MyButton, MyModal } from './components';
+import { GameRoom, Home, RoomsList } from './views'
+import { clearToken, connect, extractToken, sendMessage, userData, route, Route, roomData } from './modules';
 
-const router = useRouter();
+const errorText = ref('');
 
-onBeforeMount(async () => {
+const init = async () => {
+  errorText.value = '';
+
   const tokenFromStorage = extractToken();
   if (!tokenFromStorage) {
+    route.value = Route.Home;
     return;
   }
 
@@ -34,11 +44,12 @@ onBeforeMount(async () => {
   })
 
   if (!result.ok) {
+    errorText.value = 'Произошла непредвиденная ошибка'
     return;
   }
 
   if (result.data.valid) {
-    const { id, name } = result.data;
+    const { id, name, activeRoom } = result.data;
 
     userData.id = id;
     userData.name = name;
@@ -46,15 +57,26 @@ onBeforeMount(async () => {
 
     const isConnected = await connect(tokenFromStorage);
 
-    if (isConnected && router.currentRoute.value.path == Route.Home) {
-      router.replace(Route.RoomsList);
+    if (!isConnected) {
+      errorText.value = 'Не удалось подключиться к серверу';
+      return;
+    }
+
+    if (activeRoom) {
+      roomData.value = activeRoom;
+
+      route.value = Route.GameRoom;
+    } else {
+      route.value = Route.RoomsList;
     }
   } else {
     clearToken();
 
-    router.replace(Route.Home);
+    route.value = Route.Home;
   }
-})
+}
+
+onBeforeMount(init);
 </script>
 
 <style scoped>

@@ -5,7 +5,7 @@ export enum ServerMessageType {
   UserData = 'userData',
   RoomData = 'roomData',
   GameOver = 'gameOver',
-  CreatorLeft = 'creatorLeft',
+  RoomDeleted = 'roomDeleted',
 }
 
 export namespace IServerMessageData {
@@ -22,8 +22,8 @@ export namespace IServerMessageData {
     roomId: string,
   }
 
-  export interface CreatorLeft {
-
+  export interface RoomDeleted {
+    roomId: string,
   }
 }
 
@@ -31,7 +31,7 @@ export type IServerMessageDataMap = {
   [ServerMessageType.UserData]: IServerMessageData.UserData,
   [ServerMessageType.RoomData]: IServerMessageData.RoomData,
   [ServerMessageType.GameOver]: IServerMessageData.GameOver,
-  [ServerMessageType.CreatorLeft]: IServerMessageData.CreatorLeft,
+  [ServerMessageType.RoomDeleted]: IServerMessageData.RoomDeleted,
 };
 
 type IServerMessageMap = { [T in ServerMessageType]: { type: T, data: IServerMessageDataMap[T]; } };

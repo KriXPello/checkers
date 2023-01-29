@@ -1,7 +1,12 @@
 <template>
-  <main id="game-room" v-if="roomData">
+  <main id="game-room" v-if="roomData != null">
     <div class="room-header">
-      <MyButton>Выйти</MyButton>
+      <MyButton
+        :disabled="sendingMessage"
+        @click="leave"
+      >
+        Выйти
+      </MyButton>
 
       <span class="single-line-text">{{ roomData.title }}</span>
     </div>
@@ -17,9 +22,22 @@
 </template>
 
 <script lang="ts" setup>
-import { GameSide } from '#interfaces';
+import { ClientMessageType, GameSide } from '#interfaces';
 import { MyButton, GameTable, PlayerCard } from '../components'
-import { roomData } from '../modules';
+import { roomData, sendingMessage, sendMessage, route, Route } from '../modules';
+
+const leave = async () => {
+  const result = await sendMessage({
+    type: ClientMessageType.LeaveRoom,
+    data: {
+      roomId: roomData.value!.id,
+    }
+  });
+
+  if (result.ok) {
+    route.value = Route.RoomsList;
+  }
+}
 
 </script>
 

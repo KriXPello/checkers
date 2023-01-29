@@ -31,7 +31,9 @@ const wsServer = new ws.Server({
   port: 7001,
 });
 
-wsServer.on('connection', (socket, req) => {
+const removeRoomTimeouts: Record<string, NodeJS.Timeout> = {};
+
+wsServer.on('connection', async (socket, req) => {
   try {
     const reqUrl = new URL(req.url!, `http://${req.headers.host}`);
 
@@ -51,31 +53,31 @@ wsServer.on('connection', (socket, req) => {
       return;
     }
 
+    // Если пользователь является создателем комнаты, при его отключении
+    // запускаем таймер удаления комнаты. При переподключении удаляем таймер.
+    clearTimeout(removeRoomTimeouts[user.id]);
+    socket.onclose = () => {
+      const roomWithUser = RoomsManager.findRoomWithUser(user.id);
+
+      if (roomWithUser?.creator.id === user.id) {
+        removeRoomTimeouts[user.id] = setTimeout(() => {
+          RoomsManager.removeRoomWithNotify(roomWithUser.id);
+        }, 30 * 1000);
+      }
+    };
+
     const communicator = new WebsocketCommunicator({
       socket,
       receiverId: user.id,
     });
-
     user.changeCommunicator(communicator);
 
-    user.sendMessage({
+    await user.sendMessage({
       type: ServerMessageType.UserData,
       data: {
         userData: user.serialize(),
       },
     });
-
-    // Если пользователь переподключился во время игры, отправляем ему данные его комнаты
-    const roomWithUser = RoomsManager.findRoomWithUser(user.id);
-    if (roomWithUser) {
-      user.sendMessage({
-        type: ServerMessageType.RoomData,
-        data: {
-          roomFullInfo: roomWithUser.fullInfo,
-        }
-      });
-    }
-
   } catch (err) {
     logError('error wsServer on connection', err);
   }

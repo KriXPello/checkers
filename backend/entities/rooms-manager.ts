@@ -1,5 +1,7 @@
 import { ObjectSet } from '#utils';
+import { ServerMessageType } from '#interfaces';
 import { Room } from './room';
+import { broadcastService } from '../services';
 
 export namespace RoomsManager {
   const roomsSet = new ObjectSet<Room>([]);
@@ -19,7 +21,21 @@ export namespace RoomsManager {
     roomsSet.insert(room);
   };
 
-  export const removeRoom = (id: string) => {
-    roomsSet.remove(id);
+  export const removeRoomWithNotify = async (id: string) => {
+    const removedRoom = roomsSet.remove(id);
+
+    if (!removedRoom) {
+      return;
+    }
+
+    await broadcastService({
+      users: removedRoom.lobby.playersList,
+      message: {
+        type: ServerMessageType.RoomDeleted,
+        data: {
+          roomId: removedRoom.id,
+        }
+      }
+    });
   };
 }

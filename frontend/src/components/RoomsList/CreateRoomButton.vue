@@ -22,17 +22,13 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { ClientMessageType } from '#interfaces';
 import { MyButton, MyInput, MyModal } from '../common';
-import { sendMessage, sendingMessage, roomData } from '@/modules';
-import { Route } from '@/constants';
+import { sendMessage, sendingMessage, roomData, route, Route } from '@/modules';
 
 const title = ref('');
 const password = ref('');
 const isOpen = ref(false);
-
-const router = useRouter();
 
 const createRoom = async () => {
   const result = await sendMessage({
@@ -52,7 +48,7 @@ const createRoom = async () => {
     title.value = '';
     password.value = '';
 
-    router.replace(Route.GameRoom);
+    route.value = Route.GameRoom
   } else {
     alert('Не удалось создать комнату')
   }

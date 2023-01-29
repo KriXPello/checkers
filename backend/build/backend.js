@@ -148,14 +148,14 @@ class RoomLobby {
         if (!this.hasPlace || this.hasPlayer(user.id) || !this.checkPassword(password)) {
             return false;
         }
-        const { top, bottom } = this.players;
-        if (!top) {
-            this.players[_interfaces__WEBPACK_IMPORTED_MODULE_0__.GameSide.Top] = user;
+        for (const key in this.players) {
+            const side = key;
+            if (this.players[side] == null) {
+                this.players[side] = user;
+                return true;
+            }
         }
-        if (!bottom) {
-            this.players[_interfaces__WEBPACK_IMPORTED_MODULE_0__.GameSide.Bottom] = user;
-        }
-        return true;
+        return false;
     }
     removeUser(id) {
         for (const key in this.players) {
@@ -163,10 +163,10 @@ class RoomLobby {
             const player = this.players[side];
             if ((player === null || player === void 0 ? void 0 : player.id) == id) {
                 this.players[side] = null;
-                return player;
+                return true;
             }
         }
-        return null;
+        return false;
     }
     swapUsers() {
         const { bottom, top } = this.players;
@@ -278,6 +278,19 @@ class Room {
 /* harmony export */   "RoomsManager": () => (/* binding */ RoomsManager)
 /* harmony export */ });
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #utils */ "../shared/utils/index.ts");
+/* harmony import */ var _interfaces__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! #interfaces */ "../shared/interfaces/index.ts");
+/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services */ "./services/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
 
 var RoomsManager;
 (function (RoomsManager) {
@@ -292,9 +305,21 @@ var RoomsManager;
     RoomsManager.addRoom = (room) => {
         roomsSet.insert(room);
     };
-    RoomsManager.removeRoom = (id) => {
-        roomsSet.remove(id);
-    };
+    RoomsManager.removeRoomWithNotify = (id) => __awaiter(this, void 0, void 0, function* () {
+        const removedRoom = roomsSet.remove(id);
+        if (!removedRoom) {
+            return;
+        }
+        yield (0,_services__WEBPACK_IMPORTED_MODULE_2__.broadcastService)({
+            users: removedRoom.lobby.playersList,
+            message: {
+                type: _interfaces__WEBPACK_IMPORTED_MODULE_1__.ServerMessageType.RoomDeleted,
+                data: {
+                    roomId: removedRoom.id,
+                }
+            }
+        });
+    });
 })(RoomsManager || (RoomsManager = {}));
 
 
@@ -418,7 +443,8 @@ const checkToken = {
                 valid: false,
             };
         }
-        return Object.assign({ valid: true }, user.serialize());
+        const activeRoom = _entities__WEBPACK_IMPORTED_MODULE_1__.RoomsManager.findRoomWithUser(user.id);
+        return Object.assign(Object.assign({ valid: true }, user.serialize()), { activeRoom: activeRoom === null || activeRoom === void 0 ? void 0 : activeRoom.fullInfo });
     }),
 };
 
@@ -515,9 +541,11 @@ const getRooms = {
 /* harmony import */ var _create_room__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./create-room */ "./handlers/create-room.ts");
 /* harmony import */ var _get_rooms__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./get-rooms */ "./handlers/get-rooms.ts");
 /* harmony import */ var _join_room__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./join-room */ "./handlers/join-room.ts");
-/* harmony import */ var _log_in__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./log-in */ "./handlers/log-in.ts");
-/* harmony import */ var _make_step__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./make-step */ "./handlers/make-step.ts");
-/* harmony import */ var _swap_players__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./swap-players */ "./handlers/swap-players.ts");
+/* harmony import */ var _leave_room__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./leave-room */ "./handlers/leave-room.ts");
+/* harmony import */ var _log_in__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./log-in */ "./handlers/log-in.ts");
+/* harmony import */ var _make_step__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./make-step */ "./handlers/make-step.ts");
+/* harmony import */ var _swap_players__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./swap-players */ "./handlers/swap-players.ts");
+
 
 
 
@@ -531,9 +559,10 @@ const handlersMap = {
     [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.CreateRoom]: _create_room__WEBPACK_IMPORTED_MODULE_2__.createRoom,
     [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.GetRooms]: _get_rooms__WEBPACK_IMPORTED_MODULE_3__.getRooms,
     [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.JoinRoom]: _join_room__WEBPACK_IMPORTED_MODULE_4__.joinRoom,
-    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.LogIn]: _log_in__WEBPACK_IMPORTED_MODULE_5__.logIn,
-    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.MakeStep]: _make_step__WEBPACK_IMPORTED_MODULE_6__.makeStep,
-    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.SwapPlayers]: _swap_players__WEBPACK_IMPORTED_MODULE_7__.swapPlayers,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.LeaveRoom]: _leave_room__WEBPACK_IMPORTED_MODULE_5__.leaveRoom,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.LogIn]: _log_in__WEBPACK_IMPORTED_MODULE_6__.logIn,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.MakeStep]: _make_step__WEBPACK_IMPORTED_MODULE_7__.makeStep,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.SwapPlayers]: _swap_players__WEBPACK_IMPORTED_MODULE_8__.swapPlayers,
 };
 
 
@@ -601,12 +630,64 @@ const joinRoom = {
             };
         }
         const { playersList } = lobby;
-        console.log('lobby:', playersList);
-        const result = yield (0,_services__WEBPACK_IMPORTED_MODULE_1__.broadcastRoomFullInfo)(room, playersList);
-        console.log('broadcast result', result);
+        yield (0,_services__WEBPACK_IMPORTED_MODULE_1__.broadcastRoomFullInfo)(room, playersList);
         return {
             joined: true,
             roomInfo: room.fullInfo,
+        };
+    }),
+};
+
+
+/***/ }),
+
+/***/ "./handlers/leave-room.ts":
+/*!********************************!*\
+  !*** ./handlers/leave-room.ts ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "leaveRoom": () => (/* binding */ leaveRoom)
+/* harmony export */ });
+/* harmony import */ var _schemas__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schemas */ "./schemas/index.ts");
+/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services */ "./services/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../entities */ "./entities/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+const leaveRoom = {
+    schema: _schemas__WEBPACK_IMPORTED_MODULE_0__.clientSchemas.leaveRoom,
+    callback: ({ messageData, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+        const { roomId } = messageData;
+        const room = _entities__WEBPACK_IMPORTED_MODULE_2__.RoomsManager.find(roomId);
+        if (!room) {
+            return {
+                leaved: false,
+            };
+        }
+        const { lobby } = room;
+        const leaved = lobby.removeUser(sender.id);
+        if (!leaved) {
+            return { leaved: false };
+        }
+        if (sender.id === room.creator.id) {
+            yield _entities__WEBPACK_IMPORTED_MODULE_2__.RoomsManager.removeRoomWithNotify(room.id);
+        }
+        else {
+            yield (0,_services__WEBPACK_IMPORTED_MODULE_1__.broadcastRoomFullInfo)(room, lobby.playersList);
+        }
+        return {
+            leaved: true,
         };
     }),
 };
@@ -787,6 +868,7 @@ const swapPlayers = {
 /* harmony export */   "createRoom": () => (/* binding */ createRoom),
 /* harmony export */   "getRooms": () => (/* binding */ getRooms),
 /* harmony export */   "joinRoom": () => (/* binding */ joinRoom),
+/* harmony export */   "leaveRoom": () => (/* binding */ leaveRoom),
 /* harmony export */   "logIn": () => (/* binding */ logIn),
 /* harmony export */   "makeStep": () => (/* binding */ makeStep),
 /* harmony export */   "swapPlayers": () => (/* binding */ swapPlayers)
@@ -809,6 +891,9 @@ const getRooms = joi__WEBPACK_IMPORTED_MODULE_0___default().object({});
 const joinRoom = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
     roomId: requiredString,
     password,
+});
+const leaveRoom = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
+    roomId: requiredString,
 });
 const logIn = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
     name: requiredString,
@@ -1573,6 +1658,7 @@ var ClientMessageType;
     ClientMessageType["CreateRoom"] = "CreateRoom";
     ClientMessageType["GetRooms"] = "GetRooms";
     ClientMessageType["JoinRoom"] = "JoinRoom";
+    ClientMessageType["LeaveRoom"] = "LeaveRoom";
     ClientMessageType["SwapPlayers"] = "SwapPlayers";
     ClientMessageType["MakeStep"] = "MakeStep";
 })(ClientMessageType || (ClientMessageType = {}));
@@ -1594,7 +1680,7 @@ var ServerMessageType;
     ServerMessageType["UserData"] = "userData";
     ServerMessageType["RoomData"] = "roomData";
     ServerMessageType["GameOver"] = "gameOver";
-    ServerMessageType["CreatorLeft"] = "creatorLeft";
+    ServerMessageType["RoomDeleted"] = "roomDeleted";
 })(ServerMessageType || (ServerMessageType = {}));
 
 
@@ -2039,7 +2125,8 @@ httpServer.listen(7000);
 const wsServer = new (ws__WEBPACK_IMPORTED_MODULE_0___default().Server)({
     port: 7001,
 });
-wsServer.on('connection', (socket, req) => {
+const removeRoomTimeouts = {};
+wsServer.on('connection', (socket, req) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const reqUrl = new URL(req.url, `http://${req.headers.host}`);
         const token = reqUrl.searchParams.get('token');
@@ -2054,32 +2141,33 @@ wsServer.on('connection', (socket, req) => {
             socket.terminate();
             return;
         }
+        // Если пользователь является создателем комнаты, при его отключении
+        // запускаем таймер удаления комнаты. При переподключении удаляем таймер.
+        clearTimeout(removeRoomTimeouts[user.id]);
+        socket.onclose = () => {
+            const roomWithUser = _entities__WEBPACK_IMPORTED_MODULE_5__.RoomsManager.findRoomWithUser(user.id);
+            if ((roomWithUser === null || roomWithUser === void 0 ? void 0 : roomWithUser.creator.id) === user.id) {
+                removeRoomTimeouts[user.id] = setTimeout(() => {
+                    _entities__WEBPACK_IMPORTED_MODULE_5__.RoomsManager.removeRoomWithNotify(roomWithUser.id);
+                }, 30 * 1000);
+            }
+        };
         const communicator = new _services__WEBPACK_IMPORTED_MODULE_4__.WebsocketCommunicator({
             socket,
             receiverId: user.id,
         });
         user.changeCommunicator(communicator);
-        user.sendMessage({
+        yield user.sendMessage({
             type: _shared_interfaces_messages__WEBPACK_IMPORTED_MODULE_7__.ServerMessageType.UserData,
             data: {
                 userData: user.serialize(),
             },
         });
-        // Если пользователь переподключился во время игры, отправляем ему данные его комнаты
-        const roomWithUser = _entities__WEBPACK_IMPORTED_MODULE_5__.RoomsManager.findRoomWithUser(user.id);
-        if (roomWithUser) {
-            user.sendMessage({
-                type: _shared_interfaces_messages__WEBPACK_IMPORTED_MODULE_7__.ServerMessageType.RoomData,
-                data: {
-                    roomFullInfo: roomWithUser.fullInfo,
-                }
-            });
-        }
     }
     catch (err) {
         (0,_utils__WEBPACK_IMPORTED_MODULE_3__.logError)('error wsServer on connection', err);
     }
-});
+}));
 
 })();
 

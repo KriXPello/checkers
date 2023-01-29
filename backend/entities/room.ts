@@ -1,4 +1,4 @@
-import { GameSide, IActors, IGameConfig, IMove, IRoomBaseInfo, IRoomFullInfo, IRoomShortInfo, IUser, TableType } from '#interfaces';
+import { IGameConfig, IMove, IRoomBaseInfo, IRoomFullInfo, IRoomShortInfo, IUser, TableType } from '#interfaces';
 import { getUniqueString } from '#utils';
 import { Game } from '#entities';
 import { RoomLobby } from './room-lobby';

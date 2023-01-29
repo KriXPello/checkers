@@ -3,13 +3,14 @@
     <div class="list-container">
       <div class="control-panel">
         <MyButton
+          class="refresh-button"
           :disabled="sendingMessage"
           @click="getRooms"
         >
           Обновить
         </MyButton>
 
-        <CreateRoomButton class="create-button" />
+        <CreateRoomButton />
       </div>
 
       <MyModal
@@ -84,6 +85,10 @@ onBeforeMount(getRooms);
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
+}
+
+.refresh-button {
+  margin-right: 8px;
 }
 
 table {

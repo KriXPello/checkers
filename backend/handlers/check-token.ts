@@ -3,7 +3,7 @@ import { ClientMessageType } from '#interfaces';
 import { clientSchemas } from '../schemas';
 
 import { Handler } from '../interfaces';
-import { UsersManager } from '../entities';
+import { RoomsManager, UsersManager } from '../entities';
 
 export const checkToken: Handler<ClientMessageType.CheckToken> = {
   noAuth: true,
@@ -19,9 +19,12 @@ export const checkToken: Handler<ClientMessageType.CheckToken> = {
       };
     }
 
+    const activeRoom = RoomsManager.findRoomWithUser(user.id);
+
     return {
       valid: true,
-      ...user.serialize()
+      ...user.serialize(),
+      activeRoom: activeRoom?.fullInfo,
     };
   },
 };

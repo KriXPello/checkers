@@ -1,16 +1,16 @@
 <template>
   <main>
-    <MyInput v-model="nameInput" label="Имя" required />
+    <MyInput v-model="nameInput" label="Имя" required @keyup.enter="login" />
     <MyButton
       id="play-button"
-      :disabled="!nameInput || sendingMessage || connectionState === ConnectionState.Connecting"
+      :disabled="disableLoginButton"
       @click="login"
     >Играть</MyButton>
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { ClientMessageType } from '#interfaces';
 import {
   sendMessage,
@@ -27,7 +27,15 @@ import { MyButton, MyInput } from '../components';
 
 const nameInput = ref('');
 
+const disableLoginButton = computed(() => {
+  return !nameInput.value || sendingMessage.value || connectionState.value === ConnectionState.Connecting
+})
+
 const login = async () => {
+  if (disableLoginButton.value) {
+    return;
+  }
+
   const result = await sendMessage({
     type: ClientMessageType.LogIn,
     data: {

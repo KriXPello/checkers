@@ -1245,7 +1245,7 @@ class Game {
         }
         const availableStepsMap = this.findAvailableSteps(selectedUnit.side);
         const availableStepsOfUnit = availableStepsMap[selectedUnit.id];
-        if (!availableStepsOfUnit.length) {
+        if (!(availableStepsOfUnit === null || availableStepsOfUnit === void 0 ? void 0 : availableStepsOfUnit.length)) {
             return false;
         }
         const selectedStep = availableStepsOfUnit

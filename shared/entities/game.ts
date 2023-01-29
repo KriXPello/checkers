@@ -149,7 +149,7 @@ export class Game {
 
     const availableStepsMap = this.findAvailableSteps(selectedUnit.side);
     const availableStepsOfUnit = availableStepsMap[selectedUnit.id];
-    if (!availableStepsOfUnit.length) {
+    if (!availableStepsOfUnit?.length) {
       return false;
     }
 

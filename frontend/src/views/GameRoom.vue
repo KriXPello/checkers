@@ -58,7 +58,6 @@ const leave = async () => {
 
 .room-content {
   width: 100%;
-  max-width: 360px;
   display: flex;
   flex-direction: column;
   align-items: center;

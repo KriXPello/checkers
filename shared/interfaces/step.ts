@@ -26,4 +26,4 @@ export namespace IStep {
   }
 }
 
-export type IAllowedStepsMap = Record<IUnit['id'], IStep[]>;
+export type IAllowedStepsMap = Record<IUnit['id'], IStep[] | undefined>;

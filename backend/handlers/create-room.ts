@@ -12,7 +12,7 @@ export const createRoom: Handler<ClientMessageType.CreateRoom> = {
 
     const room = new Room({
       creator: sender,
-      title,
+      title: title.slice(0, 17),
       password,
     });
 

@@ -8,7 +8,7 @@
         Выйти
       </MyButton>
 
-      <span class="single-line-text">{{ roomData.title }}</span>
+      <span class="room-title single-line-text">Комната: {{ roomData.title }}</span>
     </div>
 
     <div class="room-content">
@@ -121,9 +121,14 @@ const startGame = async () => {
 .room-header {
   width: 100%;
   max-width: 360px;
+  padding: 0 8px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+}
+
+.room-title {
+  font-weight: 500;
 }
 
 .room-content {

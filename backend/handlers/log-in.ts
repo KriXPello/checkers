@@ -17,7 +17,7 @@ export const logIn: Handler<ClientMessageType.LogIn> = {
     const user = new User({
       id,
       token,
-      name,
+      name: name.slice(0, 14),
       communicator: null,
     });
 

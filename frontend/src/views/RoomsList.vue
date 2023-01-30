@@ -2,6 +2,8 @@
   <main>
     <div class="list-container">
       <div class="control-panel">
+        <span class="single-line-text page-label">Выбор комнаты</span>
+
         <MyButton
           class="refresh-button"
           :disabled="sendingMessage"
@@ -23,27 +25,32 @@
         <SelectedRoomForm :room="selectedRoom" />
       </MyModal>
 
-      <table>
-        <thead>
-          <tr>
-            <th id="th-title">Название</th>
-            <th id="th-players">Игроки</th>
-            <th id="th-type">Тип</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
+      <div class="table">
+        <div class="colgroup">
+          <div class="col single-line-text" style="width: 100%"></div>
+          <div class="col" style="width: auto"></div>
+          <div class="col" style="width: auto"></div>
+        </div>
+        <div class="thead">
+          <div class="row">
+            <div class="th">Название</div>
+            <div class="th">Игроки</div>
+            <div class="th">Тип</div>
+          </div>
+        </div>
+        <div class="tbody">
+          <div
             v-for="room in rooms"
-            class="room-row"
+            class="row"
             :key="room.id"
             @click="selectedRoom = room"
           >
-            <td>{{ room.title }}</td>
-            <td>{{ `${room.playersCount}/2` }}</td>
-            <td>{{ room.isSecured ? 'закрытая' : 'открытая' }}</td>
-          </tr>
-        </tbody>
-      </table>
+            <div class="td single-line-text">{{ room.title }}</div>
+            <div class="td">{{ `${room.playersCount}/2` }}</div>
+            <div class="td">{{ room.isSecured ? 'закрытая' : 'открытая' }}</div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 </template>
@@ -81,31 +88,65 @@ onBeforeMount(getRooms);
 
 .control-panel {
   width: 100%;
-  height: 50px;
+  height: 30px;
+  padding: 0 8px;
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
+  gap: 8px;
 }
 
-.refresh-button {
-  margin-right: 8px;
+.page-label {
+  font-weight: 600;
+  margin-right: auto;
 }
 
-table {
+.table {
   width: 100%;
+  display: table;
+  empty-cells: show;
+  border-radius: 16px;
+  /* background-color: red; */
+}
+.colgroup {
+  display: table-column-group;
+}
+.col {
+  display: table-column;
+}
+.thead {
+  display: table-header-group;
+}
+.tbody {
+  display: table-row-group;
+}
+.row {
+  display: table-row;
+}
+.th {
+  display: table-cell;
+  font-weight: 500;
+  padding: 8px;
+}
+.td {
+  display: table-cell;
+  padding: 4px 8px;
+  font-size: 14px;
+  text-overflow: ellipsis;
 }
 
-#th-title {
-  width: 50%;
-}
-#th-players, #th-type {
-  width: 25%;
+.thead .row .th {
+  border-bottom: solid 1px lightgray;
 }
 
-.room-row {
-  transition: all 200ms;
+.tbody .row:hover {
+  cursor: pointer;
+  background-color: #f1f1f1;
 }
-.room-row:hover {
-  background-color: lightgray;
+
+@media (max-width: 290px) {
+  .page-label {
+    display: none;
+  }
 }
 </style>

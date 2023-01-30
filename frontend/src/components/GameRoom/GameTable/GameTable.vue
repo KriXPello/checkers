@@ -12,7 +12,7 @@
       v-for="unit in snapshot.units"
       :key="unit.id"
       :data="unit"
-      :unavailable="started && stepOfCurrentUser && !availableSteps[unit.id]?.length"
+      :unavailable="!locked && stepOfCurrentUser && !availableSteps[unit.id]?.length"
       @select="selectUnit(unit)"
     />
 
@@ -27,7 +27,7 @@
       />
     </template>
 
-    <div v-show="locked || !started || !stepOfCurrentUser" class="lock-overlay"></div>
+    <div v-show="locked || !stepOfCurrentUser" class="lock-overlay"></div>
 
     <slot></slot>
   </div>
@@ -46,7 +46,6 @@ const p = defineProps<{
   snapshot: IGameSnapshot,
   actors: IActors,
   locked: boolean,
-  started: boolean,
 }>();
 
 const emit = defineEmits<{

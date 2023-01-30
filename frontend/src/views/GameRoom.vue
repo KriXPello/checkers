@@ -17,8 +17,7 @@
       <GameTable
         :snapshot="roomData.gameSnapshot"
         :actors="roomData.actors"
-        :locked="sendingMessage"
-        :started="roomData.started"
+        :locked="sendingMessage || !roomData.started"
         @move="makeStep"
       >
         <RoomControl

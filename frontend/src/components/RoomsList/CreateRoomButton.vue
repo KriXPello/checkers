@@ -9,8 +9,19 @@
     closable
     @close="isOpen = false"
   >
-    <MyInput class="field" label="Название" v-model="title" required/>
-    <MyInput class="field" label="Пароль (необязательно)" v-model="password"/>
+    <MyInput
+      class="field"
+      label="Название"
+      v-model="title"
+      required
+      @keyup.enter="createRoom"
+    />
+    <MyInput
+      class="field"
+      label="Пароль (необязательно)"
+      v-model="password"
+      @keyup.enter="createRoom"
+    />
 
     <MyButton
       id="create-button"
@@ -31,6 +42,10 @@ const password = ref('');
 const isOpen = ref(false);
 
 const createRoom = async () => {
+  if (!title.value || sendingMessage.value) {
+    return;
+  }
+
   const result = await sendMessage({
     type: ClientMessageType.CreateRoom,
     data: {

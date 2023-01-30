@@ -14,8 +14,8 @@ export class RoomLobby {
     const { creator, password } = data;
 
     this.players = {
-      [GameSide.Top]: creator,
-      [GameSide.Bottom]: null,
+      [GameSide.Top]: null,
+      [GameSide.Bottom]: creator,
     };
     this.password = password || null;
   }

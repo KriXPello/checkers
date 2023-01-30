@@ -13,13 +13,15 @@ import { computed } from 'vue';
 
 const p = defineProps<{
   disabled?: boolean,
+  /** Не выделять серым */
+  invisibleDisable?: boolean,
 }>()
 
 const emit = defineEmits(['click'])
 
 const computedClasses = computed(() => {
   if (p.disabled) {
-    return ['disabled'];
+    return p.invisibleDisable ? ['invisible-disabled'] : ['disabled'];
   }
 
   return ['enabled']
@@ -57,6 +59,10 @@ const emitClick = () => {
 .disabled {
   background-color: lightgray;
   border-radius: 4px;
+  cursor: default;
+}
+
+.invisible-disabled {
   cursor: default;
 }
 </style>

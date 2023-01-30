@@ -3,6 +3,7 @@
     <div class="room-header">
       <MyButton
         :disabled="sendingMessage"
+        invisible-disable
         @click="leave"
       >
         Выйти

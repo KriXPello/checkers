@@ -40,15 +40,13 @@ const emitClick = () => {
   height: 30px;
   outline: none;
   border: solid 1px lightgray;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
 
   transition: 200ms;
 }
 
-.enabled {
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-}
 .enabled:hover {
   box-shadow: 0 1px 4px lightgray;
 }

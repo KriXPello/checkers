@@ -15,6 +15,7 @@ export class Room {
   public title: string;
   public readonly creator: User;
   public readonly lobby: RoomLobby;
+  public started: boolean = false;
 
   private savedConfig: IGameConfig;
   private game: Game;
@@ -39,6 +40,10 @@ export class Room {
   }
 
   public makeStep(initiator: User, move: IMove): boolean {
+    if (!this.started) {
+      return false;
+    }
+
     const gameAlreadyFinished = !!this.game.winnerSide;
     if (gameAlreadyFinished) {
       return false;
@@ -62,6 +67,7 @@ export class Room {
 
   public restartGame() {
     const { savedConfig } = this;
+    this.started = false;
     this.game = Game.createNew({ config: savedConfig });
   };
 
@@ -83,7 +89,7 @@ export class Room {
   }
 
   public get fullInfo(): IRoomFullInfo {
-    const { baseInfo, game, creator, lobby } = this;
+    const { baseInfo, game, creator, started: started, lobby } = this;
     const { actors } = lobby;
 
     const gameSnapshot = game.snapshot();
@@ -91,6 +97,7 @@ export class Room {
     return {
       ...baseInfo,
       creatorId: creator.id,
+      started,
       actors,
       gameSnapshot,
     };

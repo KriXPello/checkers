@@ -10,7 +10,7 @@
           <div v-if="closable" @click="closeModal">✖</div>
         </div>
 
-        <div class="content">
+        <div class="content" :style="contentStyle">
           <slot></slot>
         </div>
       </div>
@@ -27,6 +27,7 @@ const props = defineProps<{
   hideHeader?: boolean,
   width?: string | number,
   height?: string | number,
+  contentStyle?: StyleValue,
 }>()
 
 const emit = defineEmits(['close'])

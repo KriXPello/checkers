@@ -2,30 +2,34 @@
   <button
     class="base"
     :class="computedClasses"
-    @click="emit('click')"
-    :style="style"
+    @click="emitClick"
   >
     <slot></slot>
   </button>
 </template>
 
 <script lang="ts" setup>
-import { computed, type StyleValue } from 'vue';
+import { computed } from 'vue';
 
-const props = defineProps<{
-  style?: StyleValue,
+const p = defineProps<{
   disabled?: boolean,
 }>()
 
 const emit = defineEmits(['click'])
 
 const computedClasses = computed(() => {
-  if (props.disabled) {
+  if (p.disabled) {
     return ['disabled'];
   }
 
   return ['enabled']
 })
+
+const emitClick = () => {
+  if (!p.disabled) {
+    emit('click')
+  }
+}
 
 </script>
 

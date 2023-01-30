@@ -34,6 +34,14 @@ export const logIn = joi.object<IClientMessageData.LogIn>({
   name: requiredString,
 });
 
+export const restartGame = joi.object<IClientMessageData.RestartGame>({
+  roomId: requiredString,
+});
+
+export const startGame = joi.object<IClientMessageData.StartGame>({
+  roomId: requiredString,
+});
+
 // [number, number]
 const position = joi
   .array()

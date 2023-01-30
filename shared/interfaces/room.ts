@@ -15,6 +15,7 @@ export interface IRoomShortInfo extends IRoomBaseInfo {
 
 export interface IRoomFullInfo extends IRoomBaseInfo {
   creatorId: string,
+  started: boolean,
   actors: IActors,
   gameSnapshot: IGameSnapshot,
 }

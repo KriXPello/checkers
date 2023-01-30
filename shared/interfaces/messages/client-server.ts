@@ -8,6 +8,8 @@ export enum ClientMessageType {
   GetRooms = 'GetRooms',
   JoinRoom = 'JoinRoom',
   LeaveRoom = 'LeaveRoom',
+  RestartGame = 'RestartGame',
+  StartGame = 'StartGame',
   SwapPlayers = 'SwapPlayers',
   MakeStep = 'MakeStep',
 }
@@ -39,6 +41,14 @@ export namespace IClientMessageData {
     roomId: string,
   }
 
+  export interface RestartGame {
+    roomId: string,
+  }
+
+  export interface StartGame {
+    roomId: string,
+  }
+
   export interface SwapPlayers {
     roomId: string,
   }
@@ -56,7 +66,9 @@ export type IClientMessageDataMap = {
   [ClientMessageType.GetRooms]: IClientMessageData.GetRooms,
   [ClientMessageType.JoinRoom]: IClientMessageData.JoinRoom,
   [ClientMessageType.LeaveRoom]: IClientMessageData.LeaveRoom,
+  [ClientMessageType.StartGame]: IClientMessageData.StartGame,
   [ClientMessageType.SwapPlayers]: IClientMessageData.SwapPlayers,
+  [ClientMessageType.RestartGame]: IClientMessageData.RestartGame,
   [ClientMessageType.MakeStep]: IClientMessageData.MakeStep,
 };
 
@@ -101,6 +113,14 @@ export namespace IServerResponse {
     leaved: boolean,
   };
 
+  export interface RestartGame {
+    restarted: boolean,
+  }
+
+  export interface StartGame {
+    started: boolean,
+  }
+
   export interface SwapPlayers {
     swapped: boolean,
   }
@@ -117,6 +137,8 @@ export type IServerResponseMap = {
   [ClientMessageType.GetRooms]: IServerResponse.GetRooms,
   [ClientMessageType.JoinRoom]: IServerResponse.JoinRoom,
   [ClientMessageType.LeaveRoom]: IServerResponse.LeaveRoom,
+  [ClientMessageType.RestartGame]: IServerResponse.RestartGame,
+  [ClientMessageType.StartGame]: IServerResponse.StartGame,
   [ClientMessageType.SwapPlayers]: IServerResponse.SwapPlayers,
   [ClientMessageType.MakeStep]: IServerResponse.MakeStep,
 };

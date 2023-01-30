@@ -5,6 +5,7 @@ export enum ServerMessageType {
   UserData = 'userData',
   RoomData = 'roomData',
   GameOver = 'gameOver',
+  GameRestart = 'gameRestart',
   RoomDeleted = 'roomDeleted',
 }
 
@@ -22,6 +23,10 @@ export namespace IServerMessageData {
     roomId: string,
   }
 
+  export interface GameRestart {
+    roomFullInfo: IRoomFullInfo,
+  }
+
   export interface RoomDeleted {
     roomId: string,
   }
@@ -31,6 +36,7 @@ export type IServerMessageDataMap = {
   [ServerMessageType.UserData]: IServerMessageData.UserData,
   [ServerMessageType.RoomData]: IServerMessageData.RoomData,
   [ServerMessageType.GameOver]: IServerMessageData.GameOver,
+  [ServerMessageType.GameRestart]: IServerMessageData.GameRestart,
   [ServerMessageType.RoomDeleted]: IServerMessageData.RoomDeleted,
 };
 

@@ -204,6 +204,7 @@ class RoomLobby {
 
 class Room {
     constructor(data) {
+        this.started = false;
         const { title, password, creator } = data;
         this.id = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getUniqueString)();
         this.title = title;
@@ -219,6 +220,9 @@ class Room {
         this.game = _entities__WEBPACK_IMPORTED_MODULE_2__.Game.createNew({ config });
     }
     makeStep(initiator, move) {
+        if (!this.started) {
+            return false;
+        }
         const gameAlreadyFinished = !!this.game.winnerSide;
         if (gameAlreadyFinished) {
             return false;
@@ -237,6 +241,7 @@ class Room {
     }
     restartGame() {
         const { savedConfig } = this;
+        this.started = false;
         this.game = _entities__WEBPACK_IMPORTED_MODULE_2__.Game.createNew({ config: savedConfig });
     }
     ;
@@ -252,10 +257,11 @@ class Room {
         return Object.assign(Object.assign({}, baseInfo), { playersCount: playersList.length });
     }
     get fullInfo() {
-        const { baseInfo, game, creator, lobby } = this;
+        const { baseInfo, game, creator, started: started, lobby } = this;
         const { actors } = lobby;
         const gameSnapshot = game.snapshot();
-        return Object.assign(Object.assign({}, baseInfo), { creatorId: creator.id, actors,
+        return Object.assign(Object.assign({}, baseInfo), { creatorId: creator.id, started,
+            actors,
             gameSnapshot });
     }
     get baseInfo() {
@@ -544,7 +550,11 @@ const getRooms = {
 /* harmony import */ var _leave_room__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./leave-room */ "./handlers/leave-room.ts");
 /* harmony import */ var _log_in__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./log-in */ "./handlers/log-in.ts");
 /* harmony import */ var _make_step__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./make-step */ "./handlers/make-step.ts");
-/* harmony import */ var _swap_players__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./swap-players */ "./handlers/swap-players.ts");
+/* harmony import */ var _restart_game__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./restart-game */ "./handlers/restart-game.ts");
+/* harmony import */ var _start_game__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./start-game */ "./handlers/start-game.ts");
+/* harmony import */ var _swap_players__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./swap-players */ "./handlers/swap-players.ts");
+
+
 
 
 
@@ -562,7 +572,9 @@ const handlersMap = {
     [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.LeaveRoom]: _leave_room__WEBPACK_IMPORTED_MODULE_5__.leaveRoom,
     [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.LogIn]: _log_in__WEBPACK_IMPORTED_MODULE_6__.logIn,
     [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.MakeStep]: _make_step__WEBPACK_IMPORTED_MODULE_7__.makeStep,
-    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.SwapPlayers]: _swap_players__WEBPACK_IMPORTED_MODULE_8__.swapPlayers,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.RestartGame]: _restart_game__WEBPACK_IMPORTED_MODULE_8__.restartGame,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.StartGame]: _start_game__WEBPACK_IMPORTED_MODULE_9__.startGame,
+    [_interfaces__WEBPACK_IMPORTED_MODULE_0__.ClientMessageType.SwapPlayers]: _swap_players__WEBPACK_IMPORTED_MODULE_10__.swapPlayers,
 };
 
 
@@ -812,6 +824,102 @@ const makeStep = {
 
 /***/ }),
 
+/***/ "./handlers/restart-game.ts":
+/*!**********************************!*\
+  !*** ./handlers/restart-game.ts ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "restartGame": () => (/* binding */ restartGame)
+/* harmony export */ });
+/* harmony import */ var _interfaces__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! #interfaces */ "../shared/interfaces/index.ts");
+/* harmony import */ var _schemas__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../schemas */ "./schemas/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../entities */ "./entities/index.ts");
+/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../services */ "./services/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+const restartGame = {
+    schema: _schemas__WEBPACK_IMPORTED_MODULE_1__.clientSchemas.restartGame,
+    callback: ({ messageData, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+        const { roomId } = messageData;
+        const room = _entities__WEBPACK_IMPORTED_MODULE_2__.RoomsManager.find(roomId);
+        if (!room || !room.winner || room.creator.id != sender.id) {
+            return { restarted: false };
+        }
+        room.restartGame();
+        yield (0,_services__WEBPACK_IMPORTED_MODULE_3__.broadcastService)({
+            users: room.lobby.playersList,
+            message: {
+                type: _interfaces__WEBPACK_IMPORTED_MODULE_0__.ServerMessageType.GameRestart,
+                data: {
+                    roomFullInfo: room.fullInfo,
+                }
+            }
+        });
+        return {
+            restarted: true,
+        };
+    }),
+};
+
+
+/***/ }),
+
+/***/ "./handlers/start-game.ts":
+/*!********************************!*\
+  !*** ./handlers/start-game.ts ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "startGame": () => (/* binding */ startGame)
+/* harmony export */ });
+/* harmony import */ var _schemas__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schemas */ "./schemas/index.ts");
+/* harmony import */ var _entities__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../entities */ "./entities/index.ts");
+/* harmony import */ var _services__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services */ "./services/index.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+const startGame = {
+    schema: _schemas__WEBPACK_IMPORTED_MODULE_0__.clientSchemas.startGame,
+    callback: ({ messageData, sender }) => __awaiter(void 0, void 0, void 0, function* () {
+        const { roomId } = messageData;
+        const room = _entities__WEBPACK_IMPORTED_MODULE_1__.RoomsManager.find(roomId);
+        if (!room || room.started || room.creator.id != sender.id) {
+            return { started: false };
+        }
+        room.started = true;
+        yield (0,_services__WEBPACK_IMPORTED_MODULE_2__.broadcastRoomFullInfo)(room, room.lobby.playersList);
+        return {
+            started: true,
+        };
+    }),
+};
+
+
+/***/ }),
+
 /***/ "./handlers/swap-players.ts":
 /*!**********************************!*\
   !*** ./handlers/swap-players.ts ***!
@@ -871,6 +979,8 @@ const swapPlayers = {
 /* harmony export */   "leaveRoom": () => (/* binding */ leaveRoom),
 /* harmony export */   "logIn": () => (/* binding */ logIn),
 /* harmony export */   "makeStep": () => (/* binding */ makeStep),
+/* harmony export */   "restartGame": () => (/* binding */ restartGame),
+/* harmony export */   "startGame": () => (/* binding */ startGame),
 /* harmony export */   "swapPlayers": () => (/* binding */ swapPlayers)
 /* harmony export */ });
 /* harmony import */ var joi__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! joi */ "joi");
@@ -897,6 +1007,12 @@ const leaveRoom = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
 });
 const logIn = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
     name: requiredString,
+});
+const restartGame = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
+    roomId: requiredString,
+});
+const startGame = joi__WEBPACK_IMPORTED_MODULE_0___default().object({
+    roomId: requiredString,
 });
 // [number, number]
 const position = joi__WEBPACK_IMPORTED_MODULE_0___default().array()
@@ -1659,6 +1775,8 @@ var ClientMessageType;
     ClientMessageType["GetRooms"] = "GetRooms";
     ClientMessageType["JoinRoom"] = "JoinRoom";
     ClientMessageType["LeaveRoom"] = "LeaveRoom";
+    ClientMessageType["RestartGame"] = "RestartGame";
+    ClientMessageType["StartGame"] = "StartGame";
     ClientMessageType["SwapPlayers"] = "SwapPlayers";
     ClientMessageType["MakeStep"] = "MakeStep";
 })(ClientMessageType || (ClientMessageType = {}));
@@ -1680,6 +1798,7 @@ var ServerMessageType;
     ServerMessageType["UserData"] = "userData";
     ServerMessageType["RoomData"] = "roomData";
     ServerMessageType["GameOver"] = "gameOver";
+    ServerMessageType["GameRestart"] = "gameRestart";
     ServerMessageType["RoomDeleted"] = "roomDeleted";
 })(ServerMessageType || (ServerMessageType = {}));
 

@@ -1,6 +1,6 @@
 import { ServerMessageType, type IServerMessage, type IServerMessageData, type IServerMessageDataMap } from '#interfaces';
 import { userData } from './user';
-import { roomData } from './active-room';
+import { roomData, winner } from './active-room';
 import { route, Route } from './routing';
 
 const handleUserData = (data: IServerMessageData.UserData) => {
@@ -19,7 +19,14 @@ const handleRoomData = (data: IServerMessageData.RoomData) => {
 };
 
 const handleGameOver = (data: IServerMessageData.GameOver) => {
+  if (roomData.value?.id == data.roomId) {
+    winner.value = data.winner;
+  }
+};
 
+const handleGameRestart = (data: IServerMessageData.GameRestart) => {
+  roomData.value = data.roomFullInfo;
+  winner.value = null;
 };
 
 const handleRoomDeleted = (data: IServerMessageData.RoomDeleted) => {
@@ -35,6 +42,7 @@ const handlersByType: { [T in ServerMessageType]: (data: IServerMessageDataMap[T
   [ServerMessageType.UserData]: handleUserData,
   [ServerMessageType.RoomData]: handleRoomData,
   [ServerMessageType.GameOver]: handleGameOver,
+  [ServerMessageType.GameRestart]: handleGameRestart,
   [ServerMessageType.RoomDeleted]: handleRoomDeleted,
 };
 

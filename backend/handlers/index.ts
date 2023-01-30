@@ -7,6 +7,8 @@ import { joinRoom } from './join-room';
 import { leaveRoom } from './leave-room';
 import { logIn } from './log-in';
 import { makeStep } from './make-step';
+import { restartGame } from './restart-game';
+import { startGame } from './start-game';
 import { swapPlayers } from './swap-players';
 
 import { Handler } from '../interfaces';
@@ -19,5 +21,7 @@ export const handlersMap: Record<ClientMessageType, Handler<any>> = {
   [ClientMessageType.LeaveRoom]: leaveRoom,
   [ClientMessageType.LogIn]: logIn,
   [ClientMessageType.MakeStep]: makeStep,
+  [ClientMessageType.RestartGame]: restartGame,
+  [ClientMessageType.StartGame]: startGame,
   [ClientMessageType.SwapPlayers]: swapPlayers,
 };

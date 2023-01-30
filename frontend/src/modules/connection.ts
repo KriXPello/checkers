@@ -1,6 +1,5 @@
 import { readonly, ref } from 'vue';
 import { userData } from './user';
-import { socketAddress } from '../constants';
 import { handleMessage } from './handle-message';
 
 export enum ConnectionState {
@@ -23,7 +22,7 @@ export const connect = (token: string) => new Promise<boolean>((resolve) => {
     socket.close(1000);
   }
 
-  socket = new WebSocket(`${socketAddress}/?token=${token}`);
+  socket = new WebSocket(`${import.meta.env.VITE_SOCKET_ADDRESS}/?token=${token}`);
 
   // Действует только во время подключения (#)
   socket.onerror = () => {

@@ -9,7 +9,10 @@
       "#entities": ["../shared/entities/index.ts"],
       "#interfaces": ["../shared/interfaces/index.ts"],
       "#utils": ["../shared/utils/index.ts"]
-    }
+    },
+    "preserveValueImports": false,
+    "importsNotUsedAsValues": "remove",
+    "lib": ["ES2017", "DOM"]
   },
 
   "references": [

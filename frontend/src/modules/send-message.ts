@@ -1,6 +1,5 @@
 import type { ClientMessageType, IClientMessage, IServerResponseMap } from '#interfaces';
 import { userData } from './user';
-import { httpAddress } from '../constants';
 import { ref, readonly } from 'vue';
 
 const sending = ref(false);
@@ -27,7 +26,7 @@ export const sendMessage = async <T extends ClientMessageType>(
     headers.append('Authorization', userData.token);
     headers.append('Content-Type', 'application/json');
 
-    const response = await fetch(`${httpAddress}/game`, {
+    const response = await fetch(`${import.meta.env.VITE_HTTP_ADDRESS}/game`, {
       method: 'POST',
       headers: headers,
       body: messageJson,

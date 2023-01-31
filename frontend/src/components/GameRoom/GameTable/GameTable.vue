@@ -35,7 +35,7 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import type { IActors, IGameSnapshot, IStep, IUnit, IMove} from '#interfaces';
+import type { IActors, IGameSnapshot, IStep, IUnit, IMove, IGameConfig} from '#interfaces';
 import { createTable, Game } from '#entities';
 import { userData } from '@/modules';
 import { stepColors } from '@/constants';
@@ -44,6 +44,7 @@ import Round from './Round.vue';
 
 const p = defineProps<{
   snapshot: IGameSnapshot,
+  config: IGameConfig,
   actors: IActors,
   locked: boolean,
 }>();
@@ -55,10 +56,10 @@ const emit = defineEmits<{
 const selectedUnit = ref<null | IUnit>(null);
 
 const availableSteps = computed(() => {
-  const game = Game.load(p.snapshot);
+  const game = Game.load(p.snapshot, p.config);
   return game.findAvailableSteps(game.turnOf);
 });
-const table = computed(() => createTable(p.snapshot.config.tableType));
+const table = computed(() => createTable(p.config.tableType));
 
 const stepOfCurrentUser = computed(() => p.actors[p.snapshot.turnOf]?.id === userData.id);
 

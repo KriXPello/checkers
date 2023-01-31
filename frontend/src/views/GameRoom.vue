@@ -17,6 +17,7 @@
 
       <GameTable
         :snapshot="roomData.gameSnapshot"
+        :config="roomData.gameConfig"
         :actors="roomData.actors"
         :locked="sendingMessage || !roomData.started"
         @move="makeStep"
@@ -34,8 +35,8 @@
     </div>
 
     <MyModal
-      v-if="winner"
-      :title="winner.id === userData.id ? 'Победа' : 'Поражение'"
+      v-if="roomData.winner && roomData.started"
+      :title="roomData.winner.id === userData.id ? 'Победа' : 'Поражение'"
       width="320"
       :content-style="{ padding: '0 8px'}"
     >
@@ -52,11 +53,10 @@
 import { computed, onUnmounted } from 'vue';
 import { ClientMessageType, GameSide, type IMove } from '#interfaces';
 import { MyButton, GameTable, PlayerCard, MyModal, RoomControl } from '../components'
-import { roomData, sendingMessage, sendMessage, route, Route, winner, userData } from '../modules';
+import { roomData, sendingMessage, sendMessage, route, Route, userData } from '../modules';
 
 onUnmounted(() => {
   roomData.value = null;
-  winner.value = null;
 })
 
 const isCreator = computed(() => roomData.value?.creatorId === userData.id);

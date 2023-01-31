@@ -1,7 +1,7 @@
 import { ClientMessageType } from '#interfaces';
 
 import { clientSchemas } from '../schemas';
-import { broadcastRoomFullInfo } from '../services';
+import { broadcastRoomState } from '../services';
 
 import { RoomsManager } from '../entities';
 import { Handler } from '../interfaces';
@@ -24,7 +24,7 @@ export const swapPlayers: Handler<ClientMessageType.SwapPlayers> = {
 
     lobby.swapUsers();
 
-    await broadcastRoomFullInfo(room, lobby.playersList);
+    await broadcastRoomState(room, lobby.playersList);
 
     return { swapped: true };
   },

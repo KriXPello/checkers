@@ -1,6 +1,6 @@
 import { ServerMessageType, type IServerMessage, type IServerMessageData, type IServerMessageDataMap } from '#interfaces';
 import { userData } from './user';
-import { roomData, winner } from './active-room';
+import { roomData } from './active-room';
 import { route, Route } from './routing';
 
 const handleUserData = (data: IServerMessageData.UserData) => {
@@ -10,23 +10,22 @@ const handleUserData = (data: IServerMessageData.UserData) => {
   userData.id = id;
 };
 
-const handleRoomData = (data: IServerMessageData.RoomData) => {
-  roomData.value = data.roomFullInfo;
-
+const handleRoomState = (data: IServerMessageData.RoomState) => {
   if (route.value != Route.GameRoom) {
     route.value = Route.GameRoom;
   }
-};
 
-const handleGameOver = (data: IServerMessageData.GameOver) => {
-  if (roomData.value?.id == data.roomId) {
-    winner.value = data.winner;
+  if (roomData.value) {
+    const { actors, gameSnapshot, started } = data.roomState;
+
+    roomData.value.started = started;
+    roomData.value.actors = actors;
+    roomData.value.gameSnapshot = gameSnapshot;
   }
 };
 
 const handleGameRestart = (data: IServerMessageData.GameRestart) => {
   roomData.value = data.roomFullInfo;
-  winner.value = null;
 };
 
 const handleRoomDeleted = (data: IServerMessageData.RoomDeleted) => {
@@ -40,8 +39,7 @@ const handleRoomDeleted = (data: IServerMessageData.RoomDeleted) => {
 
 const handlersByType: { [T in ServerMessageType]: (data: IServerMessageDataMap[T]) => void | Promise<void> } = {
   [ServerMessageType.UserData]: handleUserData,
-  [ServerMessageType.RoomData]: handleRoomData,
-  [ServerMessageType.GameOver]: handleGameOver,
+  [ServerMessageType.RoomState]: handleRoomState,
   [ServerMessageType.GameRestart]: handleGameRestart,
   [ServerMessageType.RoomDeleted]: handleRoomDeleted,
 };

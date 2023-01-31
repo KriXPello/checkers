@@ -1,10 +1,9 @@
 import { IUser } from '../user';
-import { IRoomFullInfo } from '../room';
+import { IRoomFullInfo, IRoomState } from '../room';
 
 export enum ServerMessageType {
   UserData = 'userData',
-  RoomData = 'roomData',
-  GameOver = 'gameOver',
+  RoomState = 'roomState',
   GameRestart = 'gameRestart',
   RoomDeleted = 'roomDeleted',
 }
@@ -14,13 +13,8 @@ export namespace IServerMessageData {
     userData: IUser,
   }
 
-  export interface RoomData {
-    roomFullInfo: IRoomFullInfo,
-  }
-
-  export interface GameOver {
-    winner: IUser,
-    roomId: string,
+  export interface RoomState {
+    roomState: IRoomState,
   }
 
   export interface GameRestart {
@@ -34,8 +28,7 @@ export namespace IServerMessageData {
 
 export type IServerMessageDataMap = {
   [ServerMessageType.UserData]: IServerMessageData.UserData,
-  [ServerMessageType.RoomData]: IServerMessageData.RoomData,
-  [ServerMessageType.GameOver]: IServerMessageData.GameOver,
+  [ServerMessageType.RoomState]: IServerMessageData.RoomState,
   [ServerMessageType.GameRestart]: IServerMessageData.GameRestart,
   [ServerMessageType.RoomDeleted]: IServerMessageData.RoomDeleted,
 };

@@ -1,5 +1,5 @@
-import { oppositeSides } from '#constants';
-import { GameSide, IAllowedStepsMap, IGameConfig, IGameSnapshot, IMove, IStep, ITable, IUnit, StepType } from '#interfaces';
+import { directionsMap, oppositeSides } from '#constants';
+import { Direction, GameSide, IAllowedStepsMap, IGameConfig, IGameSnapshot, IMove, IStep, ITable, IUnit, StepType } from '#interfaces';
 import { generateInitialUnits, samePos } from '#utils';
 import { createTable } from './tables';
 import { Unit } from './unit';
@@ -13,10 +13,6 @@ type ConstructorData = {
   lockedUnit?: IUnit,
 };
 
-type CreateData = {
-  config: IGameConfig;
-};
-
 export class Game {
   private _winnerSide: GameSide | null = null;
   public get winnerSide() { return this._winnerSide; }
@@ -24,7 +20,7 @@ export class Game {
   private _turnOf: GameSide;
   public get turnOf(): GameSide { return this._turnOf; }
 
-  private config: IGameConfig;
+  public readonly config: Readonly<IGameConfig>;
   /**
    * Ставится если включены множественные атаки и после
    * хода-атаки у юнита есть доступные ходы-атаки.
@@ -39,13 +35,16 @@ export class Game {
 
     this.config = config;
     this._turnOf = turnOf;
-    this.table = table;
+    this.table = table; // table не создаётся здесь, так как он нужен в createNew
     this.unitsController = new UnitsController(units);
     this.lockedUnit = lockedUnit && new Unit(lockedUnit);
+
+    if (!this.canPlay(turnOf)) {
+      this._winnerSide = oppositeSides[turnOf];
+    }
   }
 
-  public static createNew(data: CreateData): Game {
-    const { config } = data;
+  public static createNew(config: IGameConfig): Game {
     const table = createTable(config.tableType);
     const units = generateInitialUnits(table);
 
@@ -57,8 +56,8 @@ export class Game {
     });
   }
 
-  public static load(snapshot: IGameSnapshot): Game {
-    const { config, turnOf, units, lockedUnit } = snapshot;
+  public static load(snapshot: IGameSnapshot, config: IGameConfig): Game {
+    const { turnOf, units, lockedUnit } = snapshot;
     const table = createTable(config.tableType);
 
     return new Game({
@@ -71,10 +70,9 @@ export class Game {
   }
 
   public snapshot(): IGameSnapshot {
-    const { config, turnOf, unitsController, lockedUnit } = this;
+    const { turnOf, unitsController, lockedUnit } = this;
     const units = unitsController.list();
     return {
-      config,
       turnOf,
       units,
       lockedUnit,
@@ -176,7 +174,7 @@ export class Game {
       unit.upgrade();
     }
 
-    if (type === StepType.Attack) { // ход - атака
+    if (type === StepType.Attack) {
       const { config, unitsController } = this;
 
       step.affectedUnits.forEach(unit => { // удаляем убитых юнитов
@@ -205,15 +203,19 @@ export class Game {
     this.lockedUnit = undefined;
     this._turnOf = nextSide;
 
-    const nextSideUnits = this.unitsController.list(nextSide);
-    const nextSideHasUnits = nextSideUnits.length > 0;
-
-    const nextSideStepsMap = this.findAvailableSteps(nextSide);
-    const nextSideHasAvailableSteps = Object.values(nextSideStepsMap).length > 0;
-
-    if (!nextSideHasUnits || !nextSideHasAvailableSteps) {
+    if (!this.canPlay(nextSide)) {
       this._winnerSide = currentSide;
     }
+  }
+
+  private canPlay(side: GameSide): boolean {
+    const units = this.unitsController.list(side);
+    const hasUnits = units.length > 0;
+
+    const stepsMap = this.findAvailableSteps(side);
+    const hasAvailableSteps = Object.values(stepsMap).length > 0;
+
+    return hasUnits && hasAvailableSteps;
   }
 
   private findAttackSteps(unit: Unit): IStep.Attack[] {
@@ -221,10 +223,15 @@ export class Game {
 
     const attackSteps: IStep.Attack[] = [];
 
-    for (const direction of unit.attackDirections) {
-      const [xV, yV] = direction;
+    const directionLimitsMap = this.config.moveSettings[unit.side][unit.type][StepType.Attack];
 
-      for (let i = 1; i <= unit.maxMoveDistance; i++) {
+    for (const key in directionLimitsMap) {
+      const directionKey = key as Direction;
+
+      const maxDistance = directionLimitsMap[directionKey] ?? 0;
+      const [xV, yV] = directionsMap[directionKey];
+
+      for (let i = 1; i <= maxDistance; i++) {
         const x = x0 + xV * i;
         const y = y0 + yV * i;
 
@@ -265,10 +272,15 @@ export class Game {
 
     const moveSteps: IStep.Move[] = [];
 
-    for (const direction of unit.moveDirections) {
-      const [xV, yV] = direction;
+    const directionLimitsMap = this.config.moveSettings[unit.side][unit.type][StepType.Move];
 
-      for (let i = 1; i <= unit.maxMoveDistance; i++) {
+    for (const key in directionLimitsMap) {
+      const directionKey = key as Direction;
+
+      const maxDistance = directionLimitsMap[directionKey] ?? 0;
+      const [xV, yV] = directionsMap[directionKey];
+
+      for (let i = 1; i <= maxDistance; i++) {
         const x = x0 + xV * i;
         const y = y0 + yV * i;
 

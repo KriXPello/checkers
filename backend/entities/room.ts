@@ -1,4 +1,4 @@
-import { IGameConfig, IMove, IRoomBaseInfo, IRoomFullInfo, IRoomShortInfo, IUser, TableType } from '#interfaces';
+import { IGameConfig, IMove, IRoomBaseInfo, IRoomFullInfo, IRoomShortInfo, IRoomState, IUser } from '#interfaces';
 import { getUniqueString } from '#utils';
 import { Game } from '#entities';
 import { RoomLobby } from './room-lobby';
@@ -8,6 +8,7 @@ interface ConstructorData {
   title: string,
   password: string | null | undefined,
   creator: User,
+  gameConfig: IGameConfig,
 }
 
 export class Room {
@@ -17,26 +18,16 @@ export class Room {
   public readonly lobby: RoomLobby;
   public started: boolean = false;
 
-  private savedConfig: IGameConfig;
   private game: Game;
 
   constructor(data: ConstructorData) {
-    const { title, password, creator } = data;
+    const { title, password, creator, gameConfig } = data;
 
     this.id = getUniqueString();
     this.title = title;
     this.creator = creator;
     this.lobby = new RoomLobby({ creator, password });
-
-    // TODO: Возможность выбирать настройки
-    const config: IGameConfig = {
-      tableType: TableType.Basic,
-      multipleAttacks: true,
-      mustBeat: true,
-    };
-
-    this.savedConfig = config;
-    this.game = Game.createNew({ config });
+    this.game = Game.createNew(gameConfig);
   }
 
   public makeStep(initiator: User, move: IMove): boolean {
@@ -66,9 +57,8 @@ export class Room {
   }
 
   public restartGame() {
-    const { savedConfig } = this;
     this.started = false;
-    this.game = Game.createNew({ config: savedConfig });
+    this.game = Game.createNew(this.game.config);
   };
 
   public get winner(): IUser | null {
@@ -88,18 +78,25 @@ export class Room {
     };
   }
 
-  public get fullInfo(): IRoomFullInfo {
-    const { baseInfo, game, creator, started: started, lobby } = this;
-    const { actors } = lobby;
+  public get state(): IRoomState {
+    const { started, lobby, game, winner } = this;
 
-    const gameSnapshot = game.snapshot();
+    return {
+      started,
+      actors: lobby.actors,
+      gameSnapshot: game.snapshot(),
+      winner: winner || undefined,
+    };
+  }
+
+  public get fullInfo(): IRoomFullInfo {
+    const { baseInfo, state, game, creator } = this;
 
     return {
       ...baseInfo,
+      ...state,
       creatorId: creator.id,
-      started,
-      actors,
-      gameSnapshot,
+      gameConfig: game.config,
     };
   }
 

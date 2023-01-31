@@ -1,4 +1,4 @@
-import { IRoomFullInfo, IRoomShortInfo } from '#interfaces';
+import { IGameConfig, IRoomFullInfo, IRoomShortInfo } from '#interfaces';
 import { IMove } from '../helpers';
 
 export enum ClientMessageType {
@@ -26,6 +26,7 @@ export namespace IClientMessageData {
   export interface CreateRoom {
     title: string,
     password?: string,
+    gameConfig: IGameConfig,
   }
 
   export interface GetRooms {

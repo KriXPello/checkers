@@ -2,20 +2,13 @@ import joi from 'joi';
 
 import { IClientMessageData, IMove } from '#interfaces';
 
+export * from './complex';
+
 const requiredString = joi.string().min(1).required();
 const password = joi.string().allow('');
 
 export const checkToken = joi.object<IClientMessageData.CheckToken>({
   token: requiredString,
-});
-
-export const createRoom = joi.object<IClientMessageData.CreateRoom>({
-  title: joi
-    .string()
-    .min(1)
-    .required(),
-
-  password,
 });
 
 export const getRooms = joi.object<IClientMessageData.GetRooms>({});

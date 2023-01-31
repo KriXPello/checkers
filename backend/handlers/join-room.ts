@@ -1,7 +1,7 @@
 import { ClientMessageType } from '#interfaces';
 
 import { clientSchemas } from '../schemas';
-import { broadcastRoomFullInfo } from '../services';
+import { broadcastRoomState } from '../services';
 
 import { RoomsManager } from '../entities';
 import { Handler } from '../interfaces';
@@ -53,7 +53,7 @@ export const joinRoom: Handler<ClientMessageType.JoinRoom> = {
 
     const { playersList } = lobby;
 
-    await broadcastRoomFullInfo(room, playersList);
+    await broadcastRoomState(room, playersList);
 
     return {
       joined: true,

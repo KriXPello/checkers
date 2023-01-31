@@ -4,7 +4,7 @@ import { clientSchemas } from '../schemas';
 
 import { RoomsManager } from '../entities';
 import { Handler } from '../interfaces';
-import { broadcastRoomFullInfo } from '../services';
+import { broadcastRoomState } from '../services';
 
 export const startGame: Handler<ClientMessageType.StartGame> = {
   schema: clientSchemas.startGame,
@@ -18,7 +18,7 @@ export const startGame: Handler<ClientMessageType.StartGame> = {
 
     room.started = true;
 
-    await broadcastRoomFullInfo(room, room.lobby.playersList);
+    await broadcastRoomState(room, room.lobby.playersList);
 
     return {
       started: true,

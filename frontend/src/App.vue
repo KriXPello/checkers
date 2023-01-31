@@ -1,12 +1,9 @@
 <template>
-  <!-- <header>
-
-  </header> -->
-
   <div id="router-wrapper">
     <GameRoom v-if="route == Route.GameRoom" />
     <Home v-if="route == Route.Home" />
     <RoomsList v-if="route == Route.RoomsList" />
+    <CreateRoom v-if="route == Route.CreateRoom" />
 
     <MyModal v-if="errorText">
       <span>{{ errorText }}</span>
@@ -22,7 +19,7 @@
 import { onBeforeMount, ref } from 'vue';
 import { ClientMessageType } from '#interfaces';
 import { ConnectionOverlay, MyButton, MyModal } from './components';
-import { GameRoom, Home, RoomsList } from './views'
+import { CreateRoom, GameRoom, Home, RoomsList } from './views'
 import { clearToken, connect, extractToken, sendMessage, userData, route, Route, roomData } from './modules';
 
 const errorText = ref('');

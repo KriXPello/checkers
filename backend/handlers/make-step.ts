@@ -1,10 +1,10 @@
-import { ClientMessageType, ServerMessageType } from '#interfaces';
+import { ClientMessageType } from '#interfaces';
 
 import { clientSchemas } from '../schemas';
 
 import { RoomsManager } from '../entities';
 import { Handler } from '../interfaces';
-import { broadcastRoomFullInfo, broadcastService } from '../services';
+import { broadcastRoomState } from '../services';
 
 export const makeStep: Handler<ClientMessageType.MakeStep> = {
   schema: clientSchemas.makeStep,
@@ -24,22 +24,7 @@ export const makeStep: Handler<ClientMessageType.MakeStep> = {
 
     const { playersList } = room.lobby;
 
-    await broadcastRoomFullInfo(room, playersList);
-
-    const { winner } = room;
-
-    if (winner) {
-      await broadcastService({
-        users: playersList,
-        message: {
-          type: ServerMessageType.GameOver,
-          data: {
-            roomId: room.id,
-            winner,
-          }
-        }
-      });
-    }
+    await broadcastRoomState(room, playersList);
 
     return {
       success: true,

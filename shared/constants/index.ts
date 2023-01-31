@@ -1,2 +1,2 @@
-export * as directions from './directions';
+export * from './movement';
 export * from './opposite-sides';

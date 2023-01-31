@@ -1,7 +1,7 @@
 import { ClientMessageType } from '#interfaces';
 
 import { clientSchemas } from '../schemas';
-import { broadcastRoomFullInfo } from '../services';
+import { broadcastRoomState } from '../services';
 
 import { RoomsManager } from '../entities';
 import { Handler } from '../interfaces';
@@ -29,7 +29,7 @@ export const leaveRoom: Handler<ClientMessageType.LeaveRoom> = {
     if (sender.id === room.creator.id) {
       await RoomsManager.removeRoomWithNotify(room.id);
     } else {
-      await broadcastRoomFullInfo(room, lobby.playersList);
+      await broadcastRoomState(room, lobby.playersList);
     }
 
     return {

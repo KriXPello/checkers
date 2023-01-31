@@ -4,6 +4,7 @@ export enum Route {
   NotSet,
   Home,
   RoomsList,
+  CreateRoom,
   GameRoom,
 }
 

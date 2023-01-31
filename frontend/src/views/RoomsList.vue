@@ -12,7 +12,7 @@
           Обновить
         </MyButton>
 
-        <CreateRoomButton />
+        <MyButton @click="goCreateRoom">Создать</MyButton>
       </div>
 
       <MyModal
@@ -58,11 +58,15 @@
 <script lang="ts" setup>
 import { ref, onBeforeMount } from 'vue';
 import { ClientMessageType, type IRoomShortInfo } from '#interfaces';
-import { CreateRoomButton, MyButton, MyModal, SelectedRoomForm } from '../components';
-import { sendingMessage, sendMessage } from '@/modules';
+import { MyButton, MyModal, SelectedRoomForm } from '../components';
+import { Route, route, sendingMessage, sendMessage } from '..//modules';
 
 const rooms = ref<IRoomShortInfo[]>([]);
 const selectedRoom = ref<IRoomShortInfo | null>(null);
+
+const goCreateRoom = () => {
+  route.value = Route.CreateRoom;
+}
 
 const getRooms = async () => {
   const result = await sendMessage({

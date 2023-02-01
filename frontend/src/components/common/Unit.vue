@@ -1,17 +1,15 @@
 <template>
-  <Round
-    class="unit"
-    :class="{
-      'unavailable-unit': unavailable,
+  <div
+    class="unit-container"
+    :style="{
+      '--size': size,
+      backgroundColor: unitColors[side],
     }"
-    :position="data.position"
-    :color="unitColors[data.side]"
-    :scale="0.8"
-    @click="emitSelect"
+    :title="type === UnitType.Special ? 'Дамка' : 'Обычная шашка'"
   >
     <svg
       version="1.1"
-      v-if="data.type === UnitType.Special"
+      v-if="type === UnitType.Special"
       width="60%"
       height="60%"
       viewBox="0 0 512 512"
@@ -20,7 +18,7 @@
       xml:space="preserve">
       <g>
         <path
-          :fill="specialUnitMarkColors[data.side]"
+          :fill="specialUnitMarkColors[side]"
           d="M512,152.469c0-21.469-17.422-38.875-38.891-38.875c-21.484,0-38.906,17.406-38.906,38.875
           c0,10.5,4.172,20.016,10.938,27c-26.453,54.781-77.016,73.906-116.203,56.594c-34.906-15.438-47.781-59.563-52.141-93.75
           c14.234-7.484,23.938-22.391,23.938-39.594C300.734,78.016,280.719,58,256,58c-24.703,0-44.734,20.016-44.734,44.719
@@ -28,42 +26,36 @@
           c6.766-6.984,10.938-16.5,10.938-27c0-21.469-17.422-38.875-38.891-38.875C17.422,113.594,0,131,0,152.469
           c0,19.781,14.781,36.078,33.875,38.547l44.828,164.078h354.594l44.828-164.078C497.234,188.547,512,172.25,512,152.469z"/>
         <path
-          :fill="specialUnitMarkColors[data.side]"
+          :fill="specialUnitMarkColors[side]"
           d="M455.016,425.063c0,15.984-12.953,28.938-28.953,28.938H85.938C69.953,454,57,441.047,57,425.063v-2.406
           c0-16,12.953-28.953,28.938-28.953h340.125c16,0,28.953,12.953,28.953,28.953V425.063z"/>
       </g>
     </svg>
-  </Round>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { UnitType, type IUnit } from '#interfaces';
-import Round from './Round.vue'
-import { unitColors, specialUnitMarkColors } from '@/constants';
+import { GameSide, UnitType } from '#interfaces';
+import { specialUnitMarkColors, unitColors } from '@/constants';
 
-interface Props {
-  data: IUnit,
-  unavailable: boolean,
-}
-
-const p = defineProps<Props>();
-
-const emit = defineEmits(['select']);
-
-const emitSelect = () => {
-  if (!p.unavailable) {
-    emit('select');
-  }
-}
+defineProps<{
+  side: GameSide,
+  type: UnitType,
+  size: string,
+}>();
 </script>
 
 <style scoped>
-.unit {
-  cursor: pointer;
-}
+.unit-container {
+  --size: 30px;
 
-.unavailable-unit {
-  cursor: not-allowed;
-  opacity: 0.8;
+  width: var(--size);
+  aspect-ratio: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 50%;
 }
 </style>

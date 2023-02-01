@@ -8,23 +8,33 @@
       :class="cellClass(n - 1) /* n в v-for начинается с 1 */"
     ></div>
 
-    <Unit
+    <ActiveCell
       v-for="unit in snapshot.units"
       :key="unit.id"
-      :data="unit"
+      :position="unit.position"
       :unavailable="!locked && stepOfCurrentUser && !availableSteps[unit.id]?.length"
-      @select="selectUnit(unit)"
-    />
+      @click="selectUnit(unit)"
+    >
+    <Unit
+        size="80%"
+        :side="unit.side"
+        :type="unit.type"
+      />
+    </ActiveCell>
 
     <template v-if="selectedUnit">
-      <Round
+      <ActiveCell
         v-for="step in availableSteps[selectedUnit.id]"
         :key="step.destination.toString()"
         :position="step.destination"
-        :color="stepColors[step.type]"
-        :scale="0.4"
         @click="selectStep(step)"
-      />
+      >
+        <Step
+          size="40%"
+          hide-icon
+          :type="step.type"
+        />
+      </ActiveCell>
     </template>
 
     <div v-show="locked || !stepOfCurrentUser" class="lock-overlay"></div>
@@ -37,10 +47,9 @@
 import { computed, ref } from 'vue';
 import type { IActors, IGameSnapshot, IStep, IUnit, IMove, IGameConfig} from '#interfaces';
 import { createTable, Game } from '#entities';
+import { Step, Unit } from '@/components';
 import { userData } from '@/modules';
-import { stepColors } from '@/constants';
-import Unit from './Unit.vue';
-import Round from './Round.vue';
+import ActiveCell from './ActiveCell.vue';
 
 const p = defineProps<{
   snapshot: IGameSnapshot,
@@ -105,11 +114,11 @@ const selectStep = (step: IStep) => {
 }
 
 .light-cell {
-  background-color: #f0f2ef;
+  background-color: #f8f8f8;
 }
 
 .dark-cell {
-  background-color: #a69f98;
+  background-color: #cccccc;
 }
 
 .lock-overlay {

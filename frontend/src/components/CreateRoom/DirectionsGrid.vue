@@ -10,7 +10,7 @@
       type="number"
       min="0"
       :max="maxStepDistance"
-      :value="value[direction]"
+      :value="modelValue[direction]"
       @focus="($event.target as HTMLInputElement).select()"
       @input="emitInput(direction, ($event.target as HTMLInputElement).value)"
     />
@@ -25,13 +25,13 @@
 import { directionsMap, maxStepDistance } from '#constants';
 import { Direction, IDirectionsLimitsMap } from '#interfaces'
 
-defineProps<{
-  value: IDirectionsLimitsMap,
+const p = defineProps<{
+  modelValue: IDirectionsLimitsMap,
 }>()
 
 const emit = defineEmits<{
-  (event: 'input', value: { direction: Direction, value: number | undefined }): void,
-}>()
+  (e: 'update:modelValue', value: IDirectionsLimitsMap): void,
+}>();
 
 const directionsList = Object.keys(directionsMap) as Direction[];
 
@@ -39,7 +39,10 @@ const emitInput = (direction: Direction, rawValue: string | number) => {
   const rawValueNum = Number(rawValue);
   const value = rawValueNum || undefined;
 
-  emit('input', { direction, value });
+  emit('update:modelValue', {
+    ...p.modelValue,
+    [direction]: value,
+  });
 }
 </script>
 

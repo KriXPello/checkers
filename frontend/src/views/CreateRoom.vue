@@ -25,24 +25,7 @@
         label="Обязательная атака"
       />
 
-      <div
-        v-for="(sideTitle, side) in sides"
-        class="move-settings-side-group"
-      >
-        <span class="single-line-text">{{ sideTitle }}</span>
-        <div
-          v-for="unitType in units"
-          class="move-settings-unit-group"
-        >
-          <DirectionsGrid
-            v-for="stepType in steps"
-            :value="moveSettings[side][unitType][stepType]"
-            @input="moveSettings[side][unitType][stepType][$event.direction] = $event.value"
-          >
-
-          </DirectionsGrid>
-        </div>
-      </div>
+      <MoveSettings v-model="moveSettings" />
 
       <MyButton
         id="create-button"
@@ -55,25 +38,10 @@
 
 <script lang="tsx" setup>
 import { ref } from 'vue';
-import { ClientMessageType, GameSide, StepType, TableType, UnitType } from '#interfaces';
+import { ClientMessageType, TableType } from '#interfaces';
 import { defaultMoveSettings } from '#constants';
-import { DirectionsGrid, MyCheckbox, MyInput, MyButton } from '../components';
+import { MyCheckbox, MyInput, MyButton, MoveSettings } from '../components';
 import { sendMessage, sendingMessage, roomData, Route, route } from '../modules';
-
-const sides = {
-  [GameSide.Top]: 'Верхняя сторона',
-  [GameSide.Bottom]: 'Нижняя сторона',
-}
-
-const units = [
-  UnitType.Basic,
-  UnitType.Special,
-]
-
-const steps = [
-  StepType.Move,
-  StepType.Attack,
-]
 
 const title = ref('');
 const password = ref('');
@@ -127,20 +95,6 @@ const createRoom = async () => {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.move-settings-side-group {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.move-settings-unit-group {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
   gap: 16px;
 }
 </style>

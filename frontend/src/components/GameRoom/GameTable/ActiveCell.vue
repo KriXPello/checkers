@@ -1,12 +1,11 @@
 <template>
   <div
-    class="round-container"
+    class="active-cell-container"
+    :class="{ unavailable }"
     :style="containerStyle"
-    @click="emit('click')"
+    @click="emitClick"
   >
-    <div class="round" :style="roundStyle">
-      <slot></slot>
-    </div>
+    <slot></slot>
   </div>
 </template>
 
@@ -14,31 +13,27 @@
 import { computed, type StyleValue } from 'vue';
 import type { Position } from '#interfaces';
 
-interface Props {
+const p = defineProps<{
   position: Position,
-  color: string,
-  scale?: number,
-}
-
-const p = withDefaults(defineProps<Props>(), {
-  scale: 1,
-});
+  unavailable?: boolean,
+}>();
 
 const emit = defineEmits(['click']);
+
+const emitClick = () => {
+  if (!p.unavailable) {
+    emit('click');
+  }
+}
 
 const containerStyle = computed<StyleValue>(() => ({
   '--x-pos': p.position[0],
   '--y-pos': p.position[1],
 }))
-
-const roundStyle = computed<StyleValue>(() => ({
-  '--scale': p.scale,
-  backgroundColor: p.color,
-}))
 </script>
 
 <style scoped>
-.round-container {
+.active-cell-container {
   --x-pos: 0;
   --y-pos: 0;
 
@@ -54,18 +49,11 @@ const roundStyle = computed<StyleValue>(() => ({
   align-items: center;
 
   transition: all 200ms;
+  cursor: pointer;
 }
 
-.round {
-  --scale: 0.9;
-
-  width: calc(100% * var(--scale));
-  height: calc(100% * var(--scale));
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  border-radius: 50%;
+.unavailable {
+  cursor: not-allowed;
+  opacity: 0.8;
 }
 </style>

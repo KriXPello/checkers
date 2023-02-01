@@ -82,14 +82,24 @@ export class Game {
   public findAvailableSteps(side: GameSide = this.turnOf): IAllowedStepsMap {
     const { lockedUnit, config } = this;
 
-    if (config.multipleAttacks && lockedUnit) {
-      // Ищем ходы только для lockedUnit'a.
-      // Поиск ходов для другой стороны не должен ограничиваться этим юнитом
-      if (lockedUnit.side === side) {
-        return {
-          [lockedUnit.id]: this.findAttackSteps(lockedUnit),
+    // Если есть заблокированный юнит, ищем ходы только для него
+    // (если юнит не принадлежит переданной стороне, пропускаем это условие)
+    if (config.multipleAttacks && lockedUnit && lockedUnit.side === side) {
+      const steps: IStep[] = this.findAttackSteps(lockedUnit);
+
+      if (!config.mustBeat) {
+        const skipStep: IStep.Move = {
+          from: lockedUnit.position,
+          destination: lockedUnit.position,
+          type: StepType.Move,
         };
+
+        steps.push(skipStep);
       }
+
+      return {
+        [lockedUnit.id]: steps,
+      };
     }
 
     const unitsOfSide = this.unitsController.list(side);

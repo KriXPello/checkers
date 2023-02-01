@@ -16,11 +16,12 @@ const handleRoomState = (data: IServerMessageData.RoomState) => {
   }
 
   if (roomData.value) {
-    const { actors, gameSnapshot, started } = data.roomState;
+    const { actors, gameSnapshot, started, winner } = data.roomState;
 
     roomData.value.started = started;
     roomData.value.actors = actors;
     roomData.value.gameSnapshot = gameSnapshot;
+    roomData.value.winner = winner;
   }
 };
 

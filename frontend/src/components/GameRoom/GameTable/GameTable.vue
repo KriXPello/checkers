@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import type { IActors, IGameSnapshot, IStep, IUnit, IMove, IGameConfig} from '#interfaces';
 import { createTable, Game } from '#entities';
 import { Step, Unit } from '@/components';
@@ -72,6 +72,10 @@ const table = computed(() => createTable(p.config.tableType));
 
 const stepOfCurrentUser = computed(() => p.actors[p.snapshot.turnOf]?.id === userData.id);
 
+watchEffect(() => {
+  selectedUnit.value = p.snapshot.lockedUnit ?? null;
+})
+
 // n = 0, 1, 2, 3, ...
 const cellClass = (n: number) => {
   const x = n % table.value.width;
@@ -90,8 +94,6 @@ const selectStep = (step: IStep) => {
       from: selectedUnit.value.position,
       to: step.destination,
     });
-
-    selectedUnit.value = null;
   }
 }
 </script>

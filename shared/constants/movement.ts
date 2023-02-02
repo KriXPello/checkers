@@ -19,7 +19,6 @@ export const defaultMoveSettings = (): IMoveSettings => {
       [UnitType.Basic]: {
         [StepType.Move]: {
           [Direction.BottomRight]: 1,
-          [Direction.Bottom]: 1,
           [Direction.BottomLeft]: 1,
         },
         [StepType.Attack]: {
@@ -32,10 +31,8 @@ export const defaultMoveSettings = (): IMoveSettings => {
       [UnitType.Special]: {
         [StepType.Move]: {
           [Direction.TopLeft]: maxStepDistance,
-          [Direction.Top]: maxStepDistance,
           [Direction.TopRight]: maxStepDistance,
           [Direction.BottomRight]: maxStepDistance,
-          [Direction.Bottom]: maxStepDistance,
           [Direction.BottomLeft]: maxStepDistance,
         },
         [StepType.Attack]: {
@@ -50,7 +47,6 @@ export const defaultMoveSettings = (): IMoveSettings => {
       [UnitType.Basic]: {
         [StepType.Move]: {
           [Direction.TopLeft]: 1,
-          [Direction.Top]: 1,
           [Direction.TopRight]: 1,
         },
         [StepType.Attack]: {
@@ -63,10 +59,8 @@ export const defaultMoveSettings = (): IMoveSettings => {
       [UnitType.Special]: {
         [StepType.Move]: {
           [Direction.TopLeft]: maxStepDistance,
-          [Direction.Top]: maxStepDistance,
           [Direction.TopRight]: maxStepDistance,
           [Direction.BottomRight]: maxStepDistance,
-          [Direction.Bottom]: maxStepDistance,
           [Direction.BottomLeft]: maxStepDistance,
         },
         [StepType.Attack]: {

@@ -1,5 +1,5 @@
 import { IServerMessage, IUser } from '#interfaces';
-import { ICommunicator } from '../interfaces';
+import { ICommunicator, UserState } from '../interfaces';
 
 interface ConstructorData {
   id: string,
@@ -23,6 +23,7 @@ export class User {
   public readonly id: string;
   public readonly token: string;
   public name: string;
+  public state: UserState;
 
   private communicator: ICommunicator;
 
@@ -33,10 +34,7 @@ export class User {
     this.token = token;
     this.name = name;
     this.communicator = communicator ?? mockCommunicator;
-  }
-
-  public get wasConnected() {
-    return this.communicator != mockCommunicator;
+    this.state = UserState.NotConnected;
   }
 
   public changeCommunicator(newCommunicator: ICommunicator) {

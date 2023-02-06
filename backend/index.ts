@@ -8,6 +8,7 @@ import { WebsocketCommunicator } from './services';
 import { RoomsManager, UsersManager } from './entities';
 import { handleMessage } from './app';
 import { ServerMessageType } from '../shared/interfaces/messages';
+import { UserState } from './interfaces';
 
 const httpServer = express();
 httpServer.use(express.json());
@@ -31,7 +32,7 @@ const wsServer = new ws.Server({
   port: 7001,
 });
 
-const removeRoomTimeouts: Record<string, NodeJS.Timeout> = {};
+const removeFromRoomTimeouts: Record<string, NodeJS.Timeout> = {};
 
 wsServer.on('connection', async (socket, req) => {
   try {
@@ -53,17 +54,14 @@ wsServer.on('connection', async (socket, req) => {
       return;
     }
 
-    // Если пользователь является создателем комнаты, при его отключении
-    // запускаем таймер удаления комнаты. При переподключении удаляем таймер.
-    clearTimeout(removeRoomTimeouts[user.id]);
+    // Запускаем таймер покидания комнаты. При переподключении удаляем таймер.
+    clearTimeout(removeFromRoomTimeouts[user.id]);
     socket.onclose = () => {
-      const roomWithUser = RoomsManager.findRoomWithUser(user.id);
+      user.state = UserState.Disconnected;
 
-      if (roomWithUser?.creator.id === user.id) {
-        removeRoomTimeouts[user.id] = setTimeout(() => {
-          RoomsManager.removeRoomWithNotify(roomWithUser.id);
-        }, 30 * 1000);
-      }
+      removeFromRoomTimeouts[user.id] = setTimeout(() => {
+        RoomsManager.removeUserFromRoom(user.id);
+      }, 30 * 1000);
     };
 
     const communicator = new WebsocketCommunicator({
@@ -71,6 +69,7 @@ wsServer.on('connection', async (socket, req) => {
       receiverId: user.id,
     });
     user.changeCommunicator(communicator);
+    user.state = UserState.Connected;
 
     await user.sendMessage({
       type: ServerMessageType.UserData,

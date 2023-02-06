@@ -59,7 +59,7 @@
 import { ref, onBeforeMount } from 'vue';
 import { ClientMessageType, type IRoomShortInfo } from '#interfaces';
 import { MyButton, MyModal, SelectedRoomForm } from '../components';
-import { Route, route, sendingMessage, sendMessage } from '..//modules';
+import { Route, route, sendingMessage, sendMessage } from '../modules';
 
 const rooms = ref<IRoomShortInfo[]>([]);
 const selectedRoom = ref<IRoomShortInfo | null>(null);

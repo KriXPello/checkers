@@ -1,7 +1,7 @@
 import { ObjectSet } from '#utils';
 import { ServerMessageType } from '#interfaces';
 import { Room } from './room';
-import { broadcastService } from '../services';
+import { broadcastRoomState, broadcastService } from '../services';
 
 export namespace RoomsManager {
   const roomsSet = new ObjectSet<Room>([]);
@@ -37,5 +37,29 @@ export namespace RoomsManager {
         }
       }
     });
+  };
+
+  export const removeUserFromRoom = async (userId: string): Promise<boolean> => {
+    const room = findRoomWithUser(userId);
+
+    if (!room) {
+      return false;
+    }
+
+    const { lobby } = room;
+
+    const leaved = lobby.removeUser(userId);
+
+    if (!leaved) {
+      return false;
+    }
+
+    if (userId === room.creator.id) {
+      await removeRoomWithNotify(room.id);
+    } else {
+      await broadcastRoomState(room, lobby.playersList);
+    }
+
+    return true;
   };
 }

@@ -6,6 +6,7 @@ import { getRooms } from './get-rooms';
 import { joinRoom } from './join-room';
 import { leaveRoom } from './leave-room';
 import { logIn } from './log-in';
+import { logOut } from './log-out';
 import { makeStep } from './make-step';
 import { restartGame } from './restart-game';
 import { startGame } from './start-game';
@@ -20,6 +21,7 @@ export const handlersMap: Record<ClientMessageType, Handler<any>> = {
   [ClientMessageType.JoinRoom]: joinRoom,
   [ClientMessageType.LeaveRoom]: leaveRoom,
   [ClientMessageType.LogIn]: logIn,
+  [ClientMessageType.LogOut]: logOut,
   [ClientMessageType.MakeStep]: makeStep,
   [ClientMessageType.RestartGame]: restartGame,
   [ClientMessageType.StartGame]: startGame,

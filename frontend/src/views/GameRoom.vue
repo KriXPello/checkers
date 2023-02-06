@@ -64,9 +64,7 @@ const isCreator = computed(() => roomData.value?.creatorId === userData.id);
 const leave = async () => {
   const result = await sendMessage({
     type: ClientMessageType.LeaveRoom,
-    data: {
-      roomId: roomData.value!.id,
-    }
+    data: {}
   });
 
   if (result.ok) {

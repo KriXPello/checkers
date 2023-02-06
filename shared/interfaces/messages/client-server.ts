@@ -3,6 +3,7 @@ import { IMove } from '../helpers';
 
 export enum ClientMessageType {
   LogIn = 'LogIn',
+  LogOut = 'LogOut',
   CheckToken = 'CheckToken',
   CreateRoom = 'CreateRoom',
   GetRooms = 'GetRooms',
@@ -17,6 +18,10 @@ export enum ClientMessageType {
 export namespace IClientMessageData {
   export interface LogIn {
     name: string,
+  }
+
+  export interface LogOut {
+
   }
 
   export interface CheckToken {
@@ -39,7 +44,7 @@ export namespace IClientMessageData {
   }
 
   export interface LeaveRoom {
-    roomId: string,
+
   }
 
   export interface RestartGame {
@@ -62,6 +67,7 @@ export namespace IClientMessageData {
 
 export type IClientMessageDataMap = {
   [ClientMessageType.LogIn]: IClientMessageData.LogIn,
+  [ClientMessageType.LogOut]: IClientMessageData.LogOut,
   [ClientMessageType.CheckToken]: IClientMessageData.CheckToken,
   [ClientMessageType.CreateRoom]: IClientMessageData.CreateRoom,
   [ClientMessageType.GetRooms]: IClientMessageData.GetRooms,
@@ -83,6 +89,10 @@ export namespace IServerResponse {
     id: string,
     token: string,
     name: string,
+  }
+
+  export interface LogOut {
+
   }
 
   export type CheckToken = {
@@ -133,6 +143,7 @@ export namespace IServerResponse {
 
 export type IServerResponseMap = {
   [ClientMessageType.LogIn]: IServerResponse.LogIn,
+  [ClientMessageType.LogOut]: IServerResponse.LogOut,
   [ClientMessageType.CheckToken]: IServerResponse.CheckToken;
   [ClientMessageType.CreateRoom]: IServerResponse.CreateRoom,
   [ClientMessageType.GetRooms]: IServerResponse.GetRooms,

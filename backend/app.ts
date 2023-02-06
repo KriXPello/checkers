@@ -3,6 +3,7 @@ import { ClientMessageType, IClientMessage } from '#interfaces';
 
 import { UsersManager } from './entities';
 import { handlersMap } from './handlers';
+import { UserState } from './interfaces';
 
 const allowedMessageTypes = Object.values(ClientMessageType);
 
@@ -42,6 +43,10 @@ export const handleMessage = async (
 
       if (!sender) {
         return 401;
+      }
+
+      if (sender.state != UserState.Connected) {
+        return 418;
       }
 
       const result = await handler.callback({

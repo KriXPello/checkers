@@ -1,4 +1,15 @@
 <template>
+  <header v-if="userData.name && userData.id">
+    <span>{{ userData.name ?? '' }}</span>
+    <MyButton
+      :disabled="sendingMessage"
+      invisible-disable
+      @click="logOut"
+    >
+      Выйти
+    </MyButton>
+  </header>
+
   <div id="router-wrapper">
     <GameRoom v-if="route == Route.GameRoom" />
     <Home v-if="route == Route.Home" />
@@ -20,7 +31,7 @@ import { onBeforeMount, ref } from 'vue';
 import { ClientMessageType } from '#interfaces';
 import { ConnectionOverlay, MyButton, MyModal } from './components';
 import { CreateRoom, GameRoom, Home, RoomsList } from './views'
-import { clearToken, connect, extractToken, sendMessage, userData, route, Route, roomData } from './modules';
+import { clearToken, connect, extractToken, sendMessage, userData, route, Route, roomData, sendingMessage } from './modules';
 
 const errorText = ref('');
 
@@ -74,16 +85,33 @@ const init = async () => {
 }
 
 onBeforeMount(init);
+
+const logOut = async () => {
+  const result = await sendMessage({
+    type: ClientMessageType.LogOut,
+    data: {}
+  });
+
+  if (result.ok) {
+    userData.id = '';
+    userData.name = '';
+    userData.token = '';
+    route.value = Route.Home;
+  }
+}
 </script>
 
 <style scoped>
 header {
   width: 100%;
   height: 50px;
+  padding: 0 8px;
   border-bottom: solid 1px lightgray;
   display: flex;
   flex-direction: row;
   align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 header span {

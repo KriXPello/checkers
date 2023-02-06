@@ -20,12 +20,17 @@ export const joinRoom = joi.object<IClientMessageData.JoinRoom>({
 });
 
 export const leaveRoom = joi.object<IClientMessageData.LeaveRoom>({
-  roomId: requiredString,
+
 });
 
 export const logIn = joi.object<IClientMessageData.LogIn>({
   name: requiredString,
 });
+
+export const logOut = joi.object<IClientMessageData.LogOut>({
+
+});
+
 
 export const restartGame = joi.object<IClientMessageData.RestartGame>({
   roomId: requiredString,

@@ -3,7 +3,7 @@ import { getUniqueString } from '#utils';
 
 import { clientSchemas } from '../schemas';
 
-import { Handler } from '../interfaces';
+import { Handler, UserState } from '../interfaces';
 import { User, UsersManager } from '../entities';
 
 export const logIn: Handler<ClientMessageType.LogIn> = {
@@ -25,7 +25,7 @@ export const logIn: Handler<ClientMessageType.LogIn> = {
 
     // Если пользователь не подключился за указанное время, удаляем его
     setTimeout(() => {
-      if (!user.wasConnected) {
+      if (user.state == UserState.NotConnected) {
         UsersManager.remove(token);
       }
     }, 30 * 1000);

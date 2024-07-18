@@ -1,12 +1,5 @@
 <template>
-  <div
-    class="unit-container"
-    :style="{
-      '--size': size + 'px',
-      backgroundColor: unitColors[side],
-    }"
-    :title="type === UnitType.Special ? 'Дамка' : 'Обычная шашка'"
-  >
+  <div class="unit-figure">
     <svg
       version="1.1"
       v-if="type === UnitType.Special"
@@ -42,25 +35,22 @@ import { computed } from 'vue';
 type Props = {
   side: GameSide,
   type: UnitType,
-  size: number,
 }
 const p = defineProps<Props>();
 
-const sizePx = computed(() => p.size + 'px');
+const bgColor = computed(() => unitColors[p.side]);
 
 </script>
 
 <style scoped>
-.unit-container {
-  min-width: v-bind('sizePx');
-  max-width: v-bind('sizePx');
-  min-height: v-bind('sizePx');
-  max-height: v-bind('sizePx');
+.unit-figure {
+  aspect-ratio: 1;
 
   display: flex;
   justify-content: center;
   align-items: center;
 
   border-radius: 50%;
+  background-color: v-bind('bgColor');
 }
 </style>
